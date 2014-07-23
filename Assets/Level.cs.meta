@@ -1,0 +1,11 @@
+fileFormatVersion: 2
+guid: 6358c8a12890bb4438e0d19fc313a99b
+MonoImporter:
+  serializedVersion: 2
+  defaultReferences:
+  - BlankMaterial: {fileID: 2100000, guid: 325abe1f3e3f32142a9a9e20720795df, type: 2}
+  - WallMaterial: {fileID: 2100000, guid: d266671df8a77094eb217a260fc84fd9, type: 2}
+  - MainCamera: {instanceID: 0}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
