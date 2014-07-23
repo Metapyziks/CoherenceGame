@@ -3,23 +3,55 @@ using System.Collections;
 
 public class Tile : MonoBehaviour
 {
-    public int Neighbours;
-    public bool IsSolid;
-
     private int _neighboursID;
     private int _colorID;
+    private bool _isSolid;
+    private bool _invalidMaterial;
+
+    public Level Level;
+
+    public int X;
+    public int Y;
+
+    public int Neighbours;
+    public bool IsSolid
+    {
+        get { return _isSolid; }
+        set
+        {
+            if (value != _isSolid) {
+                _isSolid = value;
+                _invalidMaterial = true;
+            }
+        }
+    }
 
     void Start()
     {
         _neighboursID = Shader.PropertyToID("_Neighbours");
+        _invalidMaterial = true;
     }
 
-    private static bool IsNeighbourEmpty(Level level, int x, int y)
+    void Update()
     {
-        return !level[x, y].GetComponent<Tile>().IsSolid;
+        if (Level == null) return;
+
+        if (_invalidMaterial) {
+            _invalidMaterial = false;
+            if (IsSolid) {
+                renderer.material = Level.WallMaterial;
+            } else if (!IsSolid) {
+                renderer.material = Level.BlankMaterial;
+            }
+        }
     }
 
-    public void FindNeighbours(Level level, int x, int y)
+    private bool IsNeighbourEmpty(int x, int y)
+    {
+        return !Level[x, y].IsSolid;
+    }
+
+    public void FindNeighbours()
     {
         Neighbours = 0;
 
@@ -35,7 +67,7 @@ public class Tile : MonoBehaviour
         };
 
         for (int i = 0; i < 8; ++i) {
-            Neighbours |= IsNeighbourEmpty(level, x + neighbours[i, 0], y + neighbours[i, 1]) == IsSolid ? 1 << i : 0;
+            Neighbours |= IsNeighbourEmpty(X + neighbours[i, 0], Y + neighbours[i, 1]) == IsSolid ? 1 << i : 0;
         }
     }
 

@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Linq;
 
 public class Level : MonoBehaviour
 {
@@ -13,7 +14,23 @@ public class Level : MonoBehaviour
 
     private GameObject[] _tiles;
 
-	void Start ()
+    private bool _touching;
+
+    public Tile this[int x, int y]
+    {
+        get
+        {
+            if (x < 0) x = 0;
+            else if (x >= Width) x = Width - 1;
+
+            if (y < 0) y = 0;
+            else if (y >= Height) y = Height - 1;
+
+            return _tiles[x + y * Width].GetComponent<Tile>();
+        }
+    }
+
+	void Start()
     {
         _tiles = new GameObject[Width * Height];
 
@@ -31,33 +48,53 @@ public class Level : MonoBehaviour
 
         for (int x = 0; x < Width; ++x) {
             for (int y = 0; y < Height; ++y) {
-                bool solid = x == 0 || y == 0 || x == Width - 1 || y == Height - 1 || rand.NextDouble() < 0.25;
-
                 var tile = _tiles[x + y * Width] = GameObject.CreatePrimitive(PrimitiveType.Quad);
                 tile.transform.position = new Vector3(x - Width / 2f + .5f, y - Height / 2f + .5f);
-                tile.renderer.material = solid ? WallMaterial : BlankMaterial;
-                tile.AddComponent<Tile>().IsSolid = solid;
+
+                var tComp = tile.AddComponent<Tile>();
+                tComp.Level = this;
+                tComp.X = x;
+                tComp.Y = y;
+                tComp.IsSolid = x == 0 || y == 0 || x == Width - 1 || y == Height - 1 || rand.NextDouble() < 0.25;
             }
         }
 
         for (int x = 0; x < Width; ++x) {
             for (int y = 0; y < Height; ++y) {
-                this[x, y].GetComponent<Tile>().FindNeighbours(this, x, y);
+                this[x, y].FindNeighbours();
             }
         }
 	}
 
-    public GameObject this[int x, int y]
+    void Update()
     {
-        get
-        {
-            if (x < 0) x = 0;
-            else if (x >= Width) x = Width - 1;
+        bool touched = false;
+        Vector2 touchPos = Vector2.zero;
 
-            if (y < 0) y = 0;
-            else if (y >= Height) y = Height - 1;
+        if (Input.touchCount > 0) {
+            touched = true;
+            touchPos = Input.touches[0].position;
+        } else if (Input.GetMouseButton(0)) {
+            touched = true;
+            touchPos = Input.mousePosition;
+        } else {
+            _touching = false;
+        }
 
-            return _tiles[x + y * Width];
+        if (touched && !_touching && Camera.current != null) {
+            _touching = true;
+
+            var levelPos = Camera.current.ScreenToWorldPoint(new Vector3(touchPos.x, touchPos.y, 0));
+
+            var tile = _tiles.OrderBy(t => (t.transform.position - levelPos).magnitude).First().GetComponent<Tile>();
+
+            tile.IsSolid = !tile.IsSolid;
+
+            for (int x = tile.X - 1; x <= tile.X + 1; ++x) {
+                for (int y = tile.Y - 1; y <= tile.Y + 1; ++y) {
+                    this[x, y].FindNeighbours();
+                }
+            }
         }
     }
 }
