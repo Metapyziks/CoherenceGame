@@ -1,4 +1,4 @@
-﻿Shader "Custom/ComputronShader"
+﻿Shader "Custom/SimpleComputronShader"
 {
     Properties
     {
@@ -6,7 +6,6 @@
         _NoiseTex ("Noise (RGB)", 2D) = "white" {}
         _UpColor ("Up Color", Color) = (1, 1, 1, 1)
         _DownColor ("Down Color", Color) = (1, 1, 1, 1)
-        _Direction ("Direction", Float) = 0
         _State ("State", Float) = 0
     }
 
@@ -17,8 +16,6 @@
             Blend SrcAlpha OneMinusSrcAlpha
 
             CGPROGRAM
-            #pragma target 3.0
-
             #pragma vertex vert
             #pragma fragment frag
 
@@ -30,7 +27,6 @@
             uniform half4 _UpColor;
             uniform half4 _DownColor;
 
-            uniform half _Direction;
             uniform half _State;
 
             struct vertexInput
@@ -46,21 +42,12 @@
                 float2 screenPos : TEXCOORD1;
             };
 
-            float2 rotateTexCoord(float2 coord)
-            {
-                if (_Direction == 1) return float2(1 - coord.y, coord.x);
-                if (_Direction == 2) return float2(1, 1) - coord;
-                if (_Direction == 3) return float2(coord.y, 1 - coord.x);
-                
-                return coord;
-            }
-
             fragmentInput vert(vertexInput i)
             {
                 fragmentInput o;
 
                 o.position = mul(UNITY_MATRIX_MVP, i.vertex);
-                o.texCoord = rotateTexCoord(i.texCoord);
+                o.texCoord = i.texCoord;
                 o.screenPos = ComputeScreenPos(o.position).xy * _ScreenParams.xy / 1024;
 
                 return o;
@@ -73,7 +60,9 @@
 
                 half3 hue = (_State * _UpColor.rgb + (1 - _State) * _DownColor.rgb);
 
-                return float4(hue * noise * clr.r, clr.g);
+                if (clr.g < 0.5) discard;
+
+                return float4(hue * noise, 1);
             }
             ENDCG
         }

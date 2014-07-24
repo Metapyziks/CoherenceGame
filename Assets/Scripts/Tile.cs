@@ -8,11 +8,14 @@ public class Tile : MonoBehaviour
 {
     private int _neighboursID;
     private int _colorID;
+    
     private bool _isSolid;
     private bool _invalidMaterial;
 
-    public Level Level { get; set; }
+    private GameObject _overviewDummy;
 
+    public Level Level { get; set; }
+    
     public int X { get; set; }
     public int Y { get; set; }
 
@@ -33,8 +36,14 @@ public class Tile : MonoBehaviour
 
     void Start()
     {
+        gameObject.layer = LayerMask.NameToLayer("Main View");
+
         _neighboursID = Shader.PropertyToID("_Neighbours");
         _invalidMaterial = true;
+
+        _overviewDummy = GameObject.CreatePrimitive(PrimitiveType.Quad);
+        _overviewDummy.transform.position = gameObject.transform.position;
+        _overviewDummy.layer = LayerMask.NameToLayer("Overview");
     }
 
     void Update()
@@ -45,8 +54,10 @@ public class Tile : MonoBehaviour
             _invalidMaterial = false;
             if (IsSolid) {
                 renderer.material = Level.WallMaterial;
+                _overviewDummy.renderer.material = Level.SimpleWallMaterial;
             } else if (!IsSolid) {
                 renderer.material = Level.BlankMaterial;
+                _overviewDummy.renderer.material = Level.SimpleBlankMaterial;
             }
         }
     }

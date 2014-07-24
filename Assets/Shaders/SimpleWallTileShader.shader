@@ -1,11 +1,8 @@
-﻿Shader "Custom/WallTileShader"
+﻿Shader "Custom/SimpleWallTileShader"
 {
 	Properties
     {
 		_NoiseTex ("Base (RGB)", 2D) = "white" {}
-		_EdgeTex ("Edge (RGB)", 2D) = "white" {}
-		_BAndTex ("Bitwise AND Map (RGB)", 2D) = "white" {}
-        _Neighbours ("Neighbours", Float) = 0
         _Color ("Color", Color) = (1, 1, 1, 1)
 	}
 
@@ -20,10 +17,6 @@
             #include "UnityCG.cginc"
 
 		    uniform sampler2D _NoiseTex;
-		    uniform sampler2D _EdgeTex;
-		    uniform sampler2D _BAndTex;
-
-            uniform float _Neighbours;
 
             uniform half4 _Color;
 
@@ -40,11 +33,6 @@
                 float2 screenPos : TEXCOORD1;
             };
 
-            bool bitwiseAnd(float a, float b)
-            {
-                return tex2D(_BAndTex, float2(a, b)).r > 0;
-            }
-
             fragmentInput vert(vertexInput i)
             {
                 fragmentInput o;
@@ -58,15 +46,10 @@
 
 		    float4 frag(fragmentInput i) : COLOR
             {
-			    half3 c = tex2D(_NoiseTex, i.screenPos).rgb * _Color.rgb;
-			    float n = tex2D(_EdgeTex, i.texCoord).r;
-
-                float a = bitwiseAnd(n, _Neighbours) ? 0.25 : 0;
-            
-			    return float4(c + (half3(1, 1, 1) - c) * a, 1);
+			    return float4(tex2D(_NoiseTex, i.screenPos).rgb * _Color.rgb, 1);
 		    }
 		    ENDCG
         }
 	} 
-	FallBack "Custom/SimpleWallTileShader"
+	FallBack "Diffuse"
 }

@@ -2,7 +2,7 @@
 {
     Properties
     {
-        _MainTex ("Base (RGB)", 2D) = "white" {}
+        _NoiseTex ("Base (RGB)", 2D) = "white" {}
         _BAndTex ("Bitwise AND Map (RGB)", 2D) = "white" {}
         _Neighbours ("Neighbours", Float) = 0
         _Color ("Color", Color) = (1, 1, 1, 1)
@@ -10,6 +10,7 @@
 
     SubShader
     {
+        Tags { "BlankTile" = "True" }
         Pass
         {
             CGPROGRAM
@@ -20,7 +21,7 @@
 
             #include "UnityCG.cginc"
 
-            uniform sampler2D _MainTex;
+            uniform sampler2D _NoiseTex;
             uniform sampler2D _BAndTex;
             
             uniform float _Neighbours;
@@ -98,10 +99,10 @@
                         * vertShadow(i.texCoord, float2(0, 1), i.nbrsVert.w);
                 }
 
-                return float4(tex2D(_MainTex, i.screenPos).rgb * _Color.rgb * (0.8 + shad * 0.2), 1);
+                return float4(tex2D(_NoiseTex, i.screenPos).rgb * _Color.rgb * (0.8 + shad * 0.2), 1);
             }
             ENDCG
         }
     } 
-    FallBack "Diffuse"
+    FallBack "Custom/SimpleBlankTileShader"
 }

@@ -36,8 +36,32 @@ public static class DirectionExtensions
 
 public class Computron : MonoBehaviour
 {
+    public class Dummy : MonoBehaviour
+    {
+        public Computron Computron { get; set; }
+
+        void Start()
+        {
+            gameObject.layer = LayerMask.NameToLayer("Overview");
+        }
+
+        void OnWillRenderObject()
+        {
+            if (Computron == null || Computron._isRemoved) return;
+
+            renderer.material.SetFloat(Computron._stateID, Computron.State == Spin.Up ? 1 : 0);
+
+            transform.position = Computron.Tile.transform.position
+                + Computron.GetMovementVector() * Computron.Level.Delta - new Vector3(0, 0, 5f);
+        }
+    }
+
     private int _directionID;
     private int _stateID;
+
+    private bool _isRemoved;
+
+    private GameObject _overviewDummy;
 
     public Spin State { get; set; }
 
@@ -51,10 +75,12 @@ public class Computron : MonoBehaviour
 
     public Level Level { get { return Tile.Level; } }
 
-    public bool Removed { get; private set; }
+    public bool Removed { get { return _isRemoved || Tile.X == 0 || Tile.X == Level.Width - 1; } }
 
     void Start()
     {
+        gameObject.layer = LayerMask.NameToLayer("Main View");
+
         _directionID = Shader.PropertyToID("_Direction");
         _stateID = Shader.PropertyToID("_State");
     }
@@ -75,9 +101,29 @@ public class Computron : MonoBehaviour
         }
     }
 
+    public void Update()
+    {
+        if (_overviewDummy == null) {
+            _overviewDummy = GameObject.CreatePrimitive(PrimitiveType.Quad);
+            _overviewDummy.AddComponent<Dummy>().Computron = this;
+            _overviewDummy.renderer.material = Level.SimpleComputronMaterial;
+            _overviewDummy.transform.position = transform.position;
+        }
+    }
+
+    public void OnDestroy()
+    {
+        if (_overviewDummy != null) {
+            _overviewDummy.GetComponent<Dummy>().Computron = null;
+            GameObject.Destroy(_overviewDummy);
+        }
+    }
+    
     public void Remove()
     {
-        Removed = true;
+        _isRemoved = true;
+
+        GameObject.Destroy(_overviewDummy);
     }
 
     void OnWillRenderObject()
@@ -85,6 +131,6 @@ public class Computron : MonoBehaviour
         renderer.material.SetFloat(_directionID, (float) Direction);
         renderer.material.SetFloat(_stateID, State == Spin.Up ? 1 : 0);
 
-        transform.position = Tile.transform.position + GetMovementVector() * Level.Delta - new Vector3(0, 0, 0.5f);
+        transform.position = Tile.transform.position + GetMovementVector() * Level.Delta - new Vector3(0, 0, 2f);
     }
 }
