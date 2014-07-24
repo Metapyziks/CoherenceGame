@@ -51,8 +51,11 @@ public class Computron : MonoBehaviour
 
             renderer.material.SetFloat(Computron._stateID, Computron.State == Spin.Up ? 1 : 0);
 
+            renderer.sortingOrder = Computron.State == Spin.Up ? 2 : 1;
+
             transform.position = Computron.Tile.transform.position
-                + Computron.GetMovementVector() * Computron.Level.Delta - new Vector3(0, 0, 5f);
+                + Computron.GetMovementVector() * Computron.Level.Delta
+                - new Vector3(0, 0, 2f);
         }
     }
 
@@ -130,6 +133,8 @@ public class Computron : MonoBehaviour
     {
         renderer.material.SetFloat(_directionID, (float) Direction);
         renderer.material.SetFloat(_stateID, State == Spin.Up ? 1 : 0);
+
+        renderer.sortingOrder = State == Spin.Up ? 2 : 1;
 
         transform.position = Tile.transform.position + GetMovementVector() * Level.Delta - new Vector3(0, 0, 2f);
     }

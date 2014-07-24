@@ -46,6 +46,31 @@ public class Tile : MonoBehaviour
         _overviewDummy.layer = LayerMask.NameToLayer("Overview");
     }
 
+    private bool IsNeighbourEmpty(int x, int y)
+    {
+        return !Level[x, y].IsSolid;
+    }
+
+    public void FindNeighbours()
+    {
+        Neighbours = 0;
+
+        var neighbours = new[,] {
+            { -1, -1 },
+            {  0, -1 },
+            {  1, -1 },
+            {  1,  0 },
+            {  1,  1 },
+            {  0,  1 },
+            { -1,  1 },
+            { -1,  0 }
+        };
+
+        for (int i = 0; i < 8; ++i) {
+            Neighbours |= IsNeighbourEmpty(X + neighbours[i, 0], Y + neighbours[i, 1]) == IsSolid ? 1 << i : 0;
+        }
+    }
+
     void Update()
     {
         if (Level == null) return;
@@ -59,31 +84,6 @@ public class Tile : MonoBehaviour
                 renderer.material = Level.BlankMaterial;
                 _overviewDummy.renderer.material = Level.SimpleBlankMaterial;
             }
-        }
-    }
-
-    private bool IsNeighbourEmpty(int x, int y)
-    {
-        return !Level[x, y].IsSolid;
-    }
-
-    public void FindNeighbours()
-    {
-        Neighbours = 0;
-
-        var neighbours = new[,] {
-            { -1, -1 },
-            { 0, -1 },
-            { 1, -1 },
-            { 1, 0 },
-            { 1, 1 },
-            { 0, 1 },
-            { -1, 1 },
-            { -1, 0 }
-        };
-
-        for (int i = 0; i < 8; ++i) {
-            Neighbours |= IsNeighbourEmpty(X + neighbours[i, 0], Y + neighbours[i, 1]) == IsSolid ? 1 << i : 0;
         }
     }
 
@@ -156,7 +156,7 @@ public class Tile : MonoBehaviour
             Direction.Left,
             Direction.Up
         }) {
-            var matches = computrons.Where(x => x.NextDirection == direc).ToArray();
+            var matches = computrons.Where(x => !x.Removed && x.NextDirection == direc).ToArray();
             if (matches.Length <= 1) continue;
 
             var res = matches.All(x => x.State == Spin.Down);

@@ -231,7 +231,11 @@ public class Level : MonoBehaviour
             }
 
             foreach (var pair in updates) {
-                pair.Key.ProcessComputrons(pair.Value);
+                if (pair.Key.IsSolid) {
+                    pair.Value.ForEach(x => x.Remove());
+                } else {
+                    pair.Key.ProcessComputrons(pair.Value);
+                }
             }
 
             var removed = _computrons

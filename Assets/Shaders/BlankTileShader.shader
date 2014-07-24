@@ -13,6 +13,8 @@
         Tags { "BlankTile" = "True" }
         Pass
         {
+            ZWrite Off
+
             CGPROGRAM
             #pragma target 3.0
 
