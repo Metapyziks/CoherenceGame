@@ -51,13 +51,10 @@
 
             float2 rotateTexCoord(float2 coord)
             {
-                switch (_Direction) {
-                    case 0: return coord;
-                    case 1: return float2(1 - coord.y, coord.x);
-                    case 2: return float2(1, 1) - coord;
-                    case 3: return float2(coord.y, 1 - coord.x);
-                }
-
+                if (_Direction == 1) return float2(1 - coord.y, coord.x);
+                if (_Direction == 2) return float2(1, 1) - coord;
+                if (_Direction == 3) return float2(coord.y, 1 - coord.x);
+                
                 return coord;
             }
 

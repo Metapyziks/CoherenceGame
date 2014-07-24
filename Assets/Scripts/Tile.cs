@@ -11,12 +11,12 @@ public class Tile : MonoBehaviour
     private bool _isSolid;
     private bool _invalidMaterial;
 
-    public Level Level;
+    public Level Level { get; set; }
 
-    public int X;
-    public int Y;
+    public int X { get; set; }
+    public int Y { get; set; }
 
-    public int Neighbours;
+    public int Neighbours { get; set; }
     public bool IsSolid
     {
         get { return _isSolid; }
@@ -28,6 +28,8 @@ public class Tile : MonoBehaviour
             }
         }
     }
+
+    public bool IsEditable { get; set; }
 
     void Start()
     {
@@ -113,7 +115,6 @@ public class Tile : MonoBehaviour
             }
             
             var left = comp.Direction.GetLeft();
-            var back = comp.Direction.GetBack();
             var right = comp.Direction.GetRight();
 
             if (IsBlocked(comp.Direction, computrons)) {

@@ -53,8 +53,6 @@ public class Level : MonoBehaviour
         back.renderer.material = WallMaterial;
         back.AddComponent<Tile>().IsSolid = true;
 
-        var rand = new System.Random();
-
         for (int x = 0; x < Width; ++x) {
             for (int y = 0; y < Height; ++y) {
                 var tile = _tiles[x + y * Width] = GameObject.CreatePrimitive(PrimitiveType.Quad);
@@ -64,7 +62,8 @@ public class Level : MonoBehaviour
                 tComp.Level = this;
                 tComp.X = x;
                 tComp.Y = y;
-                tComp.IsSolid = x == 0 || y == 0 || x == Width - 1 || y == Height - 1 || rand.NextDouble() < 0.25;
+                tComp.IsEditable = x != 0 && y != 0 && x != Width - 1 && y != Height - 1;
+                tComp.IsSolid = !tComp.IsEditable;
             }
         }
 
@@ -116,11 +115,13 @@ public class Level : MonoBehaviour
 
             var tile = _tiles.OrderBy(t => (t.transform.position - levelPos).magnitude).First().GetComponent<Tile>();
 
-            tile.IsSolid = !tile.IsSolid;
+            if (tile.IsEditable) {
+                tile.IsSolid = !tile.IsSolid;
 
-            for (int x = tile.X - 1; x <= tile.X + 1; ++x) {
-                for (int y = tile.Y - 1; y <= tile.Y + 1; ++y) {
-                    this[x, y].FindNeighbours();
+                for (int x = tile.X - 1; x <= tile.X + 1; ++x) {
+                    for (int y = tile.Y - 1; y <= tile.Y + 1; ++y) {
+                        this[x, y].FindNeighbours();
+                    }
                 }
             }
         }
