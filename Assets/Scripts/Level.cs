@@ -76,17 +76,17 @@ public class Level : MonoBehaviour
 
         Delta = 0.5f;
 
-        CreateComputron(this[2, 3], Direction.Down, new Superposition(new UnitState(Spin.Down), new UnitState(Spin.Up)));
+        CreateComputron(this[2, 3], Direction.Down, Spin.Up);
     }
 
-    public Computron CreateComputron(Tile tile, Direction dir, ComputronState state)
+    public Computron CreateComputron(Tile tile, Direction dir, Spin state)
     {
         var part = GameObject.CreatePrimitive(PrimitiveType.Quad);
         part.renderer.material = ComputronMaterial;
 
         var comp = part.AddComponent<Computron>();
-        comp.State = state.Clone();
-        comp.Direction = dir;
+        comp.State = comp.NextState = state;
+        comp.Direction = comp.NextDirection = dir;
         comp.Tile = tile;
 
         _computrons.Add(comp);
@@ -157,6 +157,11 @@ public class Level : MonoBehaviour
             foreach (var comp in removed) {
                 _computrons.Remove(comp);
                 GameObject.Destroy(comp.gameObject);
+            }
+
+            foreach (var comp in _computrons) {
+                comp.Direction = comp.NextDirection;
+                comp.State = comp.NextState;
             }
         }
     }

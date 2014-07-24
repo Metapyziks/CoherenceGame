@@ -100,11 +100,13 @@ public class Tile : MonoBehaviour
         return GetNeighbour(dir).IsSolid || computrons.Any(x => x.Direction == dir.GetBack());
     }
 
-    public void ProcessComputrons(IEnumerable<Computron> computrons)
+    public void ProcessComputrons(List<Computron> computrons)
     {
-        int count = computrons.Count();
+        int count = computrons.Count;
 
-        foreach (var comp in computrons) {
+        var orig = computrons.ToArray();
+
+        foreach (var comp in orig) {
             if (count >= 4) {
                 comp.Remove();
                 continue;
@@ -115,16 +117,42 @@ public class Tile : MonoBehaviour
             var right = comp.Direction.GetRight();
 
             if (IsBlocked(comp.Direction, computrons)) {
-                if (count > 1 || (comp.GetLeftTile().IsSolid && comp.GetRightTile().IsSolid)) {
+                bool bLeft = IsBlocked(comp.Direction.GetLeft(), computrons);
+                bool bRight = IsBlocked(comp.Direction.GetRight(), computrons);
+
+                if (bLeft && bRight) {
                     comp.Remove();
-                } else if (comp.GetLeftTile().IsSolid) {
-                    comp.Direction = right;
-                } else if (comp.GetRightTile().IsSolid) {
-                    comp.Direction = left;
+                } else if (bLeft) {
+                    comp.NextDirection = right;
+                } else if (bRight) {
+                    comp.NextDirection = left;
                 } else {
-                    Level.CreateComputron(this, left, comp.State);
-                    comp.Direction = right;
+                    comp.NextDirection = right;
+                    comp.NextState = comp.State == Spin.Up ? Spin.Down : Spin.Up;
+
+                    var pair = Level.CreateComputron(this, left, comp.State);
+                    pair.NextState = comp.NextState;
+
+                    computrons.Add(pair);
                 }
+            }
+        }
+
+        foreach (var direc in new[] {
+            Direction.Right,
+            Direction.Down,
+            Direction.Left,
+            Direction.Up
+        }) {
+            var matches = computrons.Where(x => x.NextDirection == direc).ToArray();
+            if (matches.Length <= 1) continue;
+
+            var res = matches.All(x => x.State == Spin.Down);
+
+            matches[0].NextState = res ? Spin.Down : Spin.Up;
+
+            for (int i = 1; i < matches.Length; ++i) {
+                matches[i].Remove();
             }
         }
     }
