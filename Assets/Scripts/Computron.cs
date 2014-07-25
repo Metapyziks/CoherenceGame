@@ -45,6 +45,11 @@ public class Computron : MonoBehaviour
             gameObject.layer = LayerMask.NameToLayer("Overview");
         }
 
+        void Update()
+        {
+            transform.position = Computron.GetCurrentPosition();
+        }
+
         void OnWillRenderObject()
         {
             if (Computron == null || Computron._isRemoved) return;
@@ -53,9 +58,7 @@ public class Computron : MonoBehaviour
 
             renderer.sortingOrder = Computron.State == Spin.Up ? 2 : 1;
 
-            transform.position = Computron.Tile.transform.position
-                + Computron.GetMovementVector() * Computron.Level.Delta
-                - new Vector3(0, 0, 2f);
+            transform.position = Computron.GetCurrentPosition();
         }
     }
 
@@ -104,6 +107,11 @@ public class Computron : MonoBehaviour
         }
     }
 
+    Vector3 GetCurrentPosition()
+    {
+        return Tile.transform.position + GetMovementVector() * Level.Delta - new Vector3(0, 0, 2f);
+    }
+
     public void Update()
     {
         if (_overviewDummy == null) {
@@ -112,6 +120,8 @@ public class Computron : MonoBehaviour
             _overviewDummy.renderer.material = Level.SimpleComputronMaterial;
             _overviewDummy.transform.position = transform.position;
         }
+
+        transform.position = GetCurrentPosition();
     }
 
     public void OnDestroy()
@@ -136,6 +146,6 @@ public class Computron : MonoBehaviour
 
         renderer.sortingOrder = State == Spin.Up ? 2 : 1;
 
-        transform.position = Tile.transform.position + GetMovementVector() * Level.Delta - new Vector3(0, 0, 2f);
+        transform.position = GetCurrentPosition();
     }
 }

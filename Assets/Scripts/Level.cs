@@ -22,11 +22,13 @@ public class Level : MonoBehaviour
     public Material SimpleComputronMaterial;
 
     public Material OverviewBoundsMaterial;
+    public Material DividerShadowMaterial;
 
     public Camera MainCamera;
     public Camera OverviewCamera;
 
     private GameObject _overviewBounds;
+    private GameObject _dividerShadow;
 
     private GameObject[] _tiles;
 
@@ -127,6 +129,11 @@ public class Level : MonoBehaviour
         );
         _overviewBounds.renderer.material = OverviewBoundsMaterial;
 
+        _dividerShadow = GameObject.CreatePrimitive(PrimitiveType.Quad);
+        _dividerShadow.layer = LayerMask.NameToLayer("Main View");
+        _dividerShadow.transform.localScale = new Vector3(0.25f, MainCamera.orthographicSize * 2f, 1f);
+        _dividerShadow.renderer.material = DividerShadowMaterial;
+
         SetCameraPosition(MainCamera, new Vector2(-Width / 2f, InputTiles.Average(x => x.transform.position.y)));
     }
 
@@ -158,6 +165,7 @@ public class Level : MonoBehaviour
 
         camera.transform.position = new Vector3(position.x, position.y, -10);
         _overviewBounds.transform.position = new Vector3(position.x, position.y, -5);
+        _dividerShadow.transform.position = new Vector3(position.x + width - 0.5f - 0.125f, position.y, -5);
     }
 
     void Update()

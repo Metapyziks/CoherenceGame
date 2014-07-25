@@ -38,12 +38,15 @@ public class Tile : MonoBehaviour
     {
         gameObject.layer = LayerMask.NameToLayer("Main View");
 
+        renderer.sortingOrder = 0;
+
         _neighboursID = Shader.PropertyToID("_Neighbours");
         _invalidMaterial = true;
 
         _overviewDummy = GameObject.CreatePrimitive(PrimitiveType.Quad);
         _overviewDummy.transform.position = gameObject.transform.position;
         _overviewDummy.layer = LayerMask.NameToLayer("Overview");
+        _overviewDummy.renderer.sortingOrder = 0;
     }
 
     private bool IsNeighbourEmpty(int x, int y)
@@ -142,7 +145,8 @@ public class Tile : MonoBehaviour
                     comp.NextDirection = right;
                     comp.NextState = comp.State == Spin.Up ? Spin.Down : Spin.Up;
 
-                    var pair = Level.CreateComputron(this, left, comp.State);
+                    var pair = Level.CreateComputron(this, comp.Direction, comp.State);
+                    pair.NextDirection = left;
                     pair.NextState = comp.NextState;
 
                     computrons.Add(pair);

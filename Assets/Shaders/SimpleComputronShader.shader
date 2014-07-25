@@ -61,9 +61,7 @@
 
                 half3 hue = (_State * _UpColor.rgb + (1 - _State) * _DownColor.rgb);
 
-                if (clr.g < 0.5) discard;
-
-                return float4(hue * noise, 1);
+                return float4(hue * noise, clr.r);
             }
             ENDCG
         }
