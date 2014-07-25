@@ -6,11 +6,15 @@ using System.Collections.Generic;
 
 public class Level : MonoBehaviour
 {
-    public int Width;
-    public int Height;
+    public Puzzle Puzzle { get; set; }
 
-    public int Inputs;
-    public int Outputs;
+    public int Width { get { return Puzzle.Width; } }
+
+    public int Height { get { return Puzzle.Height; } }
+
+    public int Inputs { get { return Puzzle.InputCount; } }
+
+    public int Outputs { get { return Puzzle.OutputCount; } }
 
     public Material BlankMaterial;
     public Material WallMaterial;
@@ -62,6 +66,8 @@ public class Level : MonoBehaviour
 
     void Start()
     {
+        Puzzle = Puzzle.GetPuzzlesInCategory("Test")[0];
+
         _tiles = new GameObject[Width * Height];
         _computrons = new List<Computron>();
 
@@ -82,7 +88,7 @@ public class Level : MonoBehaviour
         }
 
         InputTiles = new Tile[Inputs];
-        int from = Height / 2 - Inputs;
+        int from = (Height + 1) / 2 - Inputs;
         for (int i = 0; i < Inputs; ++i) {
             int y = i * 2 + from;
 
@@ -95,7 +101,7 @@ public class Level : MonoBehaviour
         }
 
         OutputTiles = new Tile[Outputs];
-        from = Height / 2 - Outputs;
+        from = (Height + 1) / 2 - Outputs;
         for (int i = 0; i < Outputs; ++i) {
             int y = i * 2 + from;
 
@@ -219,7 +225,7 @@ public class Level : MonoBehaviour
 
     void FixedUpdate()
     {
-        Delta += 1f / 60f;
+        Delta += 2f / 60f;
 
         if (Delta >= 1f) {
             Delta = 0f;

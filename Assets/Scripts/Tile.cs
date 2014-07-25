@@ -143,11 +143,9 @@ public class Tile : MonoBehaviour
                     comp.NextDirection = left;
                 } else {
                     comp.NextDirection = right;
-                    comp.NextState = comp.State == Spin.Up ? Spin.Down : Spin.Up;
 
                     var pair = Level.CreateComputron(this, comp.Direction, comp.State);
                     pair.NextDirection = left;
-                    pair.NextState = comp.NextState;
 
                     computrons.Add(pair);
                 }
@@ -161,11 +159,15 @@ public class Tile : MonoBehaviour
             Direction.Up
         }) {
             var matches = computrons.Where(x => !x.Removed && x.NextDirection == direc).ToArray();
-            if (matches.Length <= 1) continue;
+            if (matches.Length < 1) continue;
 
-            var res = matches.All(x => x.State == Spin.Down);
+            var res = matches.Any(x => x.State == Spin.Up);
 
-            matches[0].NextState = res ? Spin.Down : Spin.Up;
+            matches[0].NextState = res ? Spin.Up : Spin.Down;
+
+            if (computrons.Any(x => !x.Removed && x.NextDirection == direc.GetBack())) {
+                matches[0].NextState = matches[0].NextState == Spin.Up ? Spin.Down : Spin.Up;
+            }
 
             for (int i = 1; i < matches.Length; ++i) {
                 matches[i].Remove();
