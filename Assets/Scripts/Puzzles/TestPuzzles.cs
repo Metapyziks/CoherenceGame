@@ -1,19 +1,25 @@
 ﻿using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 
 using UnityEngine;
 
 [PuzzleCategory("Test")]
-public static class TestPuzzles
+public class TestPuzzles
 {
     [Puzzle(
         name: "AND Gate",
-        desc: "A simple test puzzle.",
-        diff: Difficulty.Medium,
+        desc: "Output RED if and only if both inputs are RED.",
+        diff: Difficulty.Trivial,
         width: 27, height: 17,
-        inputs: 2, outputs: 1
+        inputPeriod: 2
     )]
-    public static bool ANDGate(bool[] input, bool[] output)
+    [Input("A", 0), Input("B", 2), Output("Q", 0)]
+    public class AndGate : Puzzle
     {
-        return (input[0] && input[1]) == output[0];
+        public override bool ShouldAccept(bool[] input, bool[] output)
+        {
+            return input.All(x => x) == output[0];
+        }
     }
 }

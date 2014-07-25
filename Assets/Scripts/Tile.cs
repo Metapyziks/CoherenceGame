@@ -132,8 +132,8 @@ public class Tile : MonoBehaviour
             var right = comp.Direction.GetRight();
 
             if (IsBlocked(comp.Direction, computrons)) {
-                bool bLeft = IsBlocked(comp.Direction.GetLeft(), computrons);
-                bool bRight = IsBlocked(comp.Direction.GetRight(), computrons);
+                bool bLeft = IsBlocked(left, computrons);
+                bool bRight = IsBlocked(right, computrons);
 
                 if (bLeft && bRight) {
                     comp.Remove();
@@ -149,6 +149,11 @@ public class Tile : MonoBehaviour
 
                     computrons.Add(pair);
                 }
+            } else {
+                var other = computrons.FirstOrDefault(x => x.State == Spin.Up
+                    && (x.Direction == left || x.Direction == right));
+
+                if (other != null) comp.Remove();
             }
         }
 

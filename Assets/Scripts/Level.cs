@@ -12,10 +12,6 @@ public class Level : MonoBehaviour
 
     public int Height { get { return Puzzle.Height; } }
 
-    public int Inputs { get { return Puzzle.InputCount; } }
-
-    public int Outputs { get { return Puzzle.OutputCount; } }
-
     public Material BlankMaterial;
     public Material WallMaterial;
 
@@ -37,6 +33,8 @@ public class Level : MonoBehaviour
     private GameObject[] _tiles;
 
     private List<Computron> _computrons;
+
+    private IEnumerator<Spin[]> _inputIter;
 
     private bool _placing;
     private bool _dragging;
@@ -66,7 +64,9 @@ public class Level : MonoBehaviour
 
     void Start()
     {
-        Puzzle = Puzzle.GetPuzzlesInCategory("Test")[0];
+        Puzzle = Puzzle.GetPuzzlesInCategory("Test").First();
+
+        _inputIter = Puzzle.GenerateInputs(null, 0).GetEnumerator();
 
         _tiles = new GameObject[Width * Height];
         _computrons = new List<Computron>();
@@ -87,10 +87,9 @@ public class Level : MonoBehaviour
             }
         }
 
-        InputTiles = new Tile[Inputs];
-        int from = (Height + 1) / 2 - Inputs;
-        for (int i = 0; i < Inputs; ++i) {
-            int y = i * 2 + from;
+        InputTiles = new Tile[Puzzle.InputCount];
+        for (int i = 0; i < Puzzle.InputCount; ++i) {
+            int y = Puzzle.InputLocations[i];
 
             InputTiles[i] = this[0, y];
 
@@ -100,10 +99,9 @@ public class Level : MonoBehaviour
             this[1, y].IsEditable = false;
         }
 
-        OutputTiles = new Tile[Outputs];
-        from = (Height + 1) / 2 - Outputs;
-        for (int i = 0; i < Outputs; ++i) {
-            int y = i * 2 + from;
+        OutputTiles = new Tile[Puzzle.OutputCount];
+        for (int i = 0; i < Puzzle.OutputCount; ++i) {
+            int y = Puzzle.OutputLocations[i];
 
             OutputTiles[i] = this[0, y];
 
@@ -266,11 +264,11 @@ public class Level : MonoBehaviour
                 comp.State = comp.NextState;
             }
 
-            if (Steps % 4 == 1) {
-                int config = Steps / 4;
-                for (int i = 0; i < Inputs; ++i) {
-                    CreateComputron(InputTiles[i], Direction.Right,
-                        ((config >> i) & 1) == 0 ? Spin.Down : Spin.Up);
+            if (Steps % (Puzzle.InputPeriod * 2) == 0 && _inputIter.MoveNext()) {
+                var input = _inputIter.Current;
+
+                for (int i = 0; i < input.Length; ++i) {
+                    CreateComputron(InputTiles[i], Direction.Right, input[i]);
                 }
             }
         }
