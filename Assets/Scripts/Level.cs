@@ -23,12 +23,14 @@ public class Level : MonoBehaviour
 
     public Material OverviewBoundsMaterial;
     public Material DividerShadowMaterial;
+    public Material BackPlaneMaterial;
 
     public Camera MainCamera;
     public Camera OverviewCamera;
 
     private GameObject _overviewBounds;
     private GameObject _dividerShadow;
+    private GameObject _backPlane;
 
     private GameObject[] _tiles;
 
@@ -36,6 +38,7 @@ public class Level : MonoBehaviour
 
     private IEnumerator<Spin[]> _inputIter;
 
+    private bool _touching;
     private bool _placing;
     private bool _dragging;
     private bool _makeSolid;
@@ -138,6 +141,14 @@ public class Level : MonoBehaviour
         _dividerShadow.transform.localScale = new Vector3(0.25f, MainCamera.orthographicSize * 2f, 1f);
         _dividerShadow.renderer.material = DividerShadowMaterial;
 
+        _backPlane = GameObject.CreatePrimitive(PrimitiveType.Quad);
+        _backPlane.layer = LayerMask.NameToLayer("Overview");
+        _backPlane.renderer.material = BackPlaneMaterial;
+        _backPlane.renderer.sortingOrder = -1;
+        _backPlane.transform.localScale = new Vector3(
+            OverviewCamera.orthographicSize * OverviewCamera.aspect * 2,
+            OverviewCamera.orthographicSize * 2, 1);
+        
         SetCameraPosition(MainCamera, new Vector2(-Width / 2f, InputTiles.Average(x => x.transform.position.y)));
     }
 
@@ -172,52 +183,62 @@ public class Level : MonoBehaviour
         _dividerShadow.transform.position = new Vector3(position.x + width - 0.5f - 0.125f, position.y, -5);
     }
 
-    void Update()
+    bool IsPosWithinCameraBounds(Camera camera, Vector3 pos)
     {
-        bool touched = false;
-        Vector2 touchPos = Vector2.zero;
+        float l = camera.transform.position.x - camera.orthographicSize * camera.aspect;
+        float r = camera.transform.position.x + camera.orthographicSize * camera.aspect;
+        float t = camera.transform.position.y - camera.orthographicSize;
+        float b = camera.transform.position.y + camera.orthographicSize;
 
-        if (Input.touchCount > 0) {
-            touched = true;
-            touchPos = Input.touches[0].position;
-        } else if (Input.GetMouseButton(0)) {
-            touched = true;
-            touchPos = Input.mousePosition;
-        } else {
-            _placing = false;
-            _dragging = false;
+        return pos.x >= l && pos.x <= r && pos.y >= t && pos.y <= b;
+    }
+
+    void Touch(Vector2 screenPos)
+    {
+        var levelPos = OverviewCamera.ScreenToWorldPoint(new Vector3(screenPos.x, screenPos.y, 0));
+
+        if (_dragging || (!_touching && IsPosWithinCameraBounds(OverviewCamera, levelPos))) {
+            _dragging = true;
+            SetCameraPosition(MainCamera, new Vector2(levelPos.x, levelPos.y));
+            return;
         }
 
-        if (touched) {
-            var levelPos = OverviewCamera.ScreenToWorldPoint(new Vector3(touchPos.x, touchPos.y, 0));
+        levelPos = MainCamera.ScreenToWorldPoint(new Vector3(screenPos.x, screenPos.y, 0));
 
-            if (!_placing && (_dragging || (levelPos.x >= -Width / 2f && levelPos.y >= -Height / 2f
-                && levelPos.x < Width / 2f && levelPos.y < Height / 2f))) {
+        if (_placing || (!_touching && IsPosWithinCameraBounds(MainCamera, levelPos))) {
+            var tile = _tiles.OrderBy(t => (t.transform.position - levelPos).magnitude).First().GetComponent<Tile>();
 
-                _dragging = true;
-                SetCameraPosition(MainCamera, new Vector2(levelPos.x, levelPos.y));
-            } else {
-                levelPos = MainCamera.ScreenToWorldPoint(new Vector3(touchPos.x, touchPos.y, 0));
+            if (tile.IsEditable) {
+                if (!_placing) {
+                    _placing = true;
+                    _makeSolid = !tile.IsSolid;
+                }
 
-                var tile = _tiles.OrderBy(t => (t.transform.position - levelPos).magnitude).First().GetComponent<Tile>();
+                if (tile.IsSolid != _makeSolid) {
+                    tile.IsSolid = _makeSolid;
 
-                if (tile.IsEditable) {
-                    if (!_placing) {
-                        _placing = true;
-                        _makeSolid = !tile.IsSolid;
-                    }
-
-                    if (tile.IsSolid != _makeSolid) {
-                        tile.IsSolid = _makeSolid;
-
-                        for (int x = tile.X - 1; x <= tile.X + 1; ++x) {
-                            for (int y = tile.Y - 1; y <= tile.Y + 1; ++y) {
-                                this[x, y].FindNeighbours();
-                            }
+                    for (int x = tile.X - 1; x <= tile.X + 1; ++x) {
+                        for (int y = tile.Y - 1; y <= tile.Y + 1; ++y) {
+                            this[x, y].FindNeighbours();
                         }
                     }
                 }
             }
+        }
+    }
+
+    void Update()
+    {
+        if (Input.touchCount > 0) {
+            Touch(Input.touches[0].position);
+            _touching = true;
+        } else if (Input.GetMouseButton(0)) {
+            Touch(Input.mousePosition);
+            _touching = true;
+        } else {
+            _touching = false;
+            _placing = false;
+            _dragging = false;
         }
     }
 

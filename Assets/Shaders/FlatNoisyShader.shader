@@ -1,11 +1,9 @@
-﻿Shader "Custom/WallTileShader"
+﻿Shader "Custom/FlatNoisyShader"
 {
     Properties
     {
         _NoiseTex ("Base (RGB)", 2D) = "white" {}
-        _EdgeTex ("Edge (RGB)", 2D) = "white" {}
-        _BAndTex ("Bitwise AND Map (RGB)", 2D) = "white" {}
-        _Neighbours ("Neighbours", Float) = 0
+        _Scale ("Scale", Float) = 1
         _Color ("Color", Color) = (1, 1, 1, 1)
     }
 
@@ -14,6 +12,7 @@
         Pass
         {
             ZWrite Off
+            Blend SrcAlpha OneMinusSrcAlpha
 
             CGPROGRAM
             #pragma vertex vert
@@ -22,10 +21,8 @@
             #include "UnityCG.cginc"
 
             uniform sampler2D _NoiseTex;
-            uniform sampler2D _EdgeTex;
-            uniform sampler2D _BAndTex;
 
-            uniform float _Neighbours;
+            uniform float _Scale;
 
             uniform half4 _Color;
 
@@ -38,8 +35,7 @@
             struct fragmentInput
             {
                 float4 position : SV_POSITION;
-                float2 texCoord : TEXCOORD0;
-                float2 screenPos : TEXCOORD1;
+                float2 screenPos : TEXCOORD0;
             };
 
             bool bitwiseAnd(float a, float b)
@@ -52,23 +48,16 @@
                 fragmentInput o;
 
                 o.position = mul(UNITY_MATRIX_MVP, i.vertex);
-                o.texCoord = i.texCoord;
-                o.screenPos = ComputeScreenPos(o.position).xy * _ScreenParams.xy / 512;
+                o.screenPos = ComputeScreenPos(o.position).xy * _ScreenParams.xy / (512 * _Scale);
 
                 return o;
             }
 
             float4 frag(fragmentInput i) : COLOR
-            {
-                half3 c = tex2D(_NoiseTex, i.screenPos).rgb * _Color.rgb;
-                float n = tex2D(_EdgeTex, i.texCoord).r;
-
-                float a = bitwiseAnd(n, _Neighbours) ? 0.25 : 0;
-            
-                return float4(c + (half3(1, 1, 1) - c) * a, 1);
+            {            
+                return float4(tex2D(_NoiseTex, i.screenPos).rgb, 1) * _Color;
             }
             ENDCG
         }
-    } 
-    FallBack "Custom/SimpleWallTileShader"
+    }
 }
