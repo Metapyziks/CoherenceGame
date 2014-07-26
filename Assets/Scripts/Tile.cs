@@ -44,6 +44,7 @@ public class Tile : MonoBehaviour
         _invalidMaterial = true;
 
         _overviewDummy = GameObject.CreatePrimitive(PrimitiveType.Quad);
+        Destroy(_overviewDummy.GetComponent<MeshCollider>());
         _overviewDummy.transform.position = gameObject.transform.position;
         _overviewDummy.layer = LayerMask.NameToLayer("Overview");
         _overviewDummy.renderer.sortingOrder = 0;

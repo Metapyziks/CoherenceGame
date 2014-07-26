@@ -6,7 +6,7 @@ using System.Collections.Generic;
 
 public class Level : MonoBehaviour
 {
-    public Puzzle Puzzle { get; set; }
+    public Puzzle Puzzle { get; private set; }
 
     public int Width { get { return Puzzle.Width; } }
 
@@ -64,10 +64,23 @@ public class Level : MonoBehaviour
             return _tiles[x + y * Width].GetComponent<Tile>();
         }
     }
-
-    void Start()
+    
+    void LoadPuzzle(Puzzle puzzle)
     {
-        Puzzle = Puzzle.GetPuzzlesInCategory("Test").First();
+        if (_tiles != null) {
+            foreach (var tile in _tiles) {
+                Destroy(tile);
+            }
+
+            foreach (var computron in _computrons) {
+                Destroy(computron);
+            }
+        }
+
+        Delta = 0f;
+        Steps = 0;
+
+        Puzzle = puzzle;
 
         _inputIter = Puzzle.GenerateInputs(null, 0).GetEnumerator();
 
@@ -75,10 +88,11 @@ public class Level : MonoBehaviour
         _computrons = new List<Computron>();
 
         OverviewCamera.orthographicSize = Mathf.Max(Height / 2f, Width / 2f / OverviewCamera.aspect) + 0.5f;
-        
+
         for (int x = 0; x < Width; ++x) {
             for (int y = 0; y < Height; ++y) {
                 var tile = _tiles[x + y * Width] = GameObject.CreatePrimitive(PrimitiveType.Quad);
+                Destroy(tile.GetComponent<MeshCollider>());
                 tile.transform.position = new Vector3(x - Width / 2f + .5f, y - Height / 2f + .5f);
 
                 var tComp = tile.AddComponent<Tile>();
@@ -119,10 +133,16 @@ public class Level : MonoBehaviour
                 this[x, y].FindNeighbours();
             }
         }
+        
+        _backPlane.transform.localScale = new Vector3(
+            OverviewCamera.orthographicSize * OverviewCamera.aspect * 2,
+            OverviewCamera.orthographicSize * 2, 1);
+    }
 
-        Delta = 0f;
-
+    void Start()
+    {
         _overviewBounds = GameObject.CreatePrimitive(PrimitiveType.Quad);
+        Destroy(_overviewBounds.GetComponent<MeshCollider>());
         _overviewBounds.layer = LayerMask.NameToLayer("Overview");
         _overviewBounds.transform.position = new Vector3(
             MainCamera.transform.position.x,
@@ -137,27 +157,29 @@ public class Level : MonoBehaviour
         _overviewBounds.renderer.material = OverviewBoundsMaterial;
 
         _dividerShadow = GameObject.CreatePrimitive(PrimitiveType.Quad);
+        Destroy(_dividerShadow.GetComponent<MeshCollider>());
         _dividerShadow.layer = LayerMask.NameToLayer("Main View");
         _dividerShadow.transform.localScale = new Vector3(0.25f, MainCamera.orthographicSize * 2f, 1f);
         _dividerShadow.renderer.material = DividerShadowMaterial;
 
         _backPlane = GameObject.CreatePrimitive(PrimitiveType.Quad);
+        Destroy(_backPlane.GetComponent<MeshCollider>());
         _backPlane.layer = LayerMask.NameToLayer("Overview");
         _backPlane.renderer.material = BackPlaneMaterial;
         _backPlane.renderer.sortingOrder = -1;
-        _backPlane.transform.localScale = new Vector3(
-            OverviewCamera.orthographicSize * OverviewCamera.aspect * 2,
-            OverviewCamera.orthographicSize * 2, 1);
-        
+
+        LoadPuzzle(Puzzle.GetPuzzlesInCategory("Test").First());
+
         SetCameraPosition(MainCamera, new Vector2(-Width / 2f, InputTiles.Average(x => x.transform.position.y)));
     }
 
     public Computron CreateComputron(Tile tile, Direction dir, Spin state)
     {
-        var part = GameObject.CreatePrimitive(PrimitiveType.Quad);
-        part.renderer.material = ComputronMaterial;
+        var quad = GameObject.CreatePrimitive(PrimitiveType.Quad);
+        Destroy(quad.GetComponent<MeshCollider>());
+        quad.renderer.material = ComputronMaterial;
 
-        var comp = part.AddComponent<Computron>();
+        var comp = quad.AddComponent<Computron>();
         comp.State = comp.NextState = state;
         comp.Direction = comp.NextDirection = dir;
         comp.Tile = tile;
@@ -277,7 +299,7 @@ public class Level : MonoBehaviour
 
             foreach (var comp in removed) {
                 _computrons.Remove(comp);
-                GameObject.Destroy(comp.gameObject);
+                Destroy(comp.gameObject);
             }
 
             foreach (var comp in _computrons) {

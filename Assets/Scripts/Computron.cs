@@ -114,29 +114,31 @@ public class Computron : MonoBehaviour
 
     public void Update()
     {
+        transform.position = GetCurrentPosition();
+
         if (_overviewDummy == null) {
             _overviewDummy = GameObject.CreatePrimitive(PrimitiveType.Quad);
+            Destroy(_overviewDummy.GetComponent<MeshCollider>());
             _overviewDummy.AddComponent<Dummy>().Computron = this;
             _overviewDummy.renderer.material = Level.SimpleComputronMaterial;
             _overviewDummy.transform.position = transform.position;
         }
-
-        transform.position = GetCurrentPosition();
     }
 
     public void OnDestroy()
     {
+        _isRemoved = true;
         if (_overviewDummy != null) {
             _overviewDummy.GetComponent<Dummy>().Computron = null;
-            GameObject.Destroy(_overviewDummy);
+            Destroy(_overviewDummy);
         }
     }
     
     public void Remove()
     {
         _isRemoved = true;
-
-        GameObject.Destroy(_overviewDummy);
+        Destroy(_overviewDummy);
+        _overviewDummy = null;
     }
 
     void OnWillRenderObject()
