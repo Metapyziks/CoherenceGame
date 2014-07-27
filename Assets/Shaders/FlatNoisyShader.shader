@@ -38,11 +38,6 @@
                 float2 screenPos : TEXCOORD0;
             };
 
-            bool bitwiseAnd(float a, float b)
-            {
-                return tex2D(_BAndTex, float2(a, b)).r > 0;
-            }
-
             fragmentInput vert(vertexInput i)
             {
                 fragmentInput o;
