@@ -17,7 +17,16 @@ public class MenuPanel : MonoBehaviour
     private GUIText _titleTxt;
     private GUIText _descrTxt;
 
-    private Button _testBtn;
+    private Button _restartBtn;
+
+    private bool _wasTouching;
+
+    public bool IsPlayerTouching
+    {
+        get { return Input.touchCount > 0 || Input.GetMouseButton(0); }
+    }
+
+    public bool IsFirstTouch { get; private set; }
 
     public GUIText CreateText(Vector2 origin, TextAnchor anchor, TextAlignment align, int sortingOrder = 0)
     {
@@ -100,6 +109,17 @@ public class MenuPanel : MonoBehaviour
         return FindRelativeToScreenScale().x * relWidth;
     }
 
+    public Vector2 GetCursorPosition()
+    {
+        var cp = Input.touchCount > 0
+            ? Input.touches[0].position 
+            : new Vector2(Input.mousePosition.x, Input.mousePosition.y);
+
+        var vp = MenuCamera.ScreenToViewportPoint(cp);
+
+        return new Vector2(vp.x, 1f - vp.y);
+    }
+
     void Start()
     {
         _backPlane = GameObject.CreatePrimitive(PrimitiveType.Quad);
@@ -117,11 +137,24 @@ public class MenuPanel : MonoBehaviour
         _descrTxt = CreateText(new Vector2(0.5f, 0.12f), TextAnchor.UpperCenter, TextAlignment.Left);
         _descrTxt.fontSize = 14;
 
-        _testBtn = CreateButton(new Vector2(0.25f, 0.3f), new Vector2(0.45f, 0.1f));
+        _restartBtn = CreateButton(new Vector2(0.25f, 0.32f), new Vector2(0.45f, 0.1f));
+        _restartBtn.Text = "Restart";
+        _restartBtn.Pressed += (sender, e) => {
+            Level.LoadPuzzle(Level.Puzzle);
+        };
     }
 
     void Update()
     {
+        if (IsPlayerTouching && !_wasTouching) {
+            IsFirstTouch = true;
+            _wasTouching = true;
+        } else {
+            IsFirstTouch = false;
+
+            if (!IsPlayerTouching) _wasTouching = false;
+        }
+
         if (Level != null && Level.Puzzle != _oldPuzzle && Level.Puzzle != null) {
             _oldPuzzle = Level.Puzzle;
 

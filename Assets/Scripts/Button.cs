@@ -12,13 +12,15 @@ public class Button : MonoBehaviour
     private Vector2 _relPos;
     private Vector2 _relSize;
 
+    private bool _held;
+
     public MenuPanel MenuPanel { get; set; }
 
-    public Color32 DefaultColor = new Color32(0x66, 0x66, 0x66, 0x33);
+    public Color32 DefaultColor = new Color32(0x66, 0x66, 0x66, 0xff);
 
-    public Color32 HoverColor = new Color32(0x99, 0x99, 0x99, 0x33);
+    public Color32 HoverColor = new Color32(0x7f, 0x7f, 0x7f, 0xff);
 
-    public Color32 PressedColor = new Color32(0xcc, 0xcc, 0xcc, 0x33);
+    public Color32 PressedColor = new Color32(0x99, 0x99, 0x99, 0xff);
 
     public Vector2 RelativeSize
     {
@@ -67,11 +69,33 @@ public class Button : MonoBehaviour
                 _text = MenuPanel.CreateText(_relPos, TextAnchor.MiddleCenter, TextAlignment.Center);
                 _text.anchor = TextAnchor.MiddleCenter;
                 _text.alignment = TextAlignment.Center;
+                _text.fontSize = 16;
 
                 MenuPanel.PositionElement(_text, RelativePosition);
             }
 
             _text.text = value;
+        }
+    }
+
+    public bool IsPlayerHovering
+    {
+        get
+        {
+            var pos = MenuPanel.GetCursorPosition();
+
+            return pos.x >= RelativePosition.x - RelativeSize.x * .5f
+                && pos.x <= RelativePosition.x + RelativeSize.x * .5f
+                && pos.y >= RelativePosition.y - RelativeSize.y * .5f
+                && pos.y <= RelativePosition.y + RelativeSize.y * .5f;
+        }
+    }
+
+    public bool IsPlayerTouching
+    {
+        get
+        {
+            return MenuPanel.IsPlayerTouching && IsPlayerHovering;
         }
     }
 
@@ -84,8 +108,28 @@ public class Button : MonoBehaviour
         gameObject.layer = LayerMask.NameToLayer("Menu View");
     }
 
+    void Update()
+    {
+        if (MenuPanel.IsFirstTouch && IsPlayerTouching) {
+            _held = true;
+        } else {
+            _held = _held && IsPlayerHovering;
+
+            if (_held && !MenuPanel.IsPlayerTouching) {
+                if (Pressed != null) Pressed(this, new EventArgs());
+                _held = false;
+            }
+        }
+    }
+
     void OnWillRenderObject()
     {
-        renderer.material.SetColor(_colorID, DefaultColor);
+        if (IsPlayerTouching) {
+            renderer.material.SetColor(_colorID, PressedColor);
+        } else if (IsPlayerHovering) {
+            renderer.material.SetColor(_colorID, HoverColor);
+        } else {
+            renderer.material.SetColor(_colorID, DefaultColor);
+        }
 	}
 }

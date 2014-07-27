@@ -95,6 +95,13 @@ public class Tile : MonoBehaviour
         }
     }
 
+    public void OnDestroy()
+    {
+        if (_overviewDummy != null) {
+            Destroy(_overviewDummy);
+        }
+    }
+
     void OnWillRenderObject()
     {
         renderer.material.SetFloat(_neighboursID, Neighbours / 255f);

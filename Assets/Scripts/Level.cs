@@ -65,15 +65,15 @@ public class Level : MonoBehaviour
         }
     }
     
-    void LoadPuzzle(Puzzle puzzle)
+    public void LoadPuzzle(Puzzle puzzle)
     {
         if (_tiles != null) {
-            foreach (var tile in _tiles) {
-                Destroy(tile);
+            foreach (var computron in _computrons) {
+                Destroy(computron.gameObject);
             }
 
-            foreach (var computron in _computrons) {
-                Destroy(computron);
+            foreach (var tile in _tiles) {
+                Destroy(tile.gameObject);
             }
         }
 
@@ -310,6 +310,7 @@ public class Level : MonoBehaviour
                 var input = _inputIter.Current;
 
                 for (int i = 0; i < input.Length; ++i) {
+                    if (input[i] == Spin.None) continue;
                     CreateComputron(InputTiles[i], Direction.Right, input[i]);
                 }
             }

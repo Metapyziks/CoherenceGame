@@ -4,6 +4,7 @@ using UnityEngine;
 
 public enum Spin
 {
+    None = 0,
     Up = 1,
     Down = 2
 }
