@@ -36,10 +36,10 @@ public class Tile : MonoBehaviour
 
     void Start()
     {
+        Destroy(GetComponent<MeshCollider>());
+
         gameObject.layer = LayerMask.NameToLayer("Main View");
-
-        renderer.sortingOrder = 0;
-
+        
         _neighboursID = Shader.PropertyToID("_Neighbours");
         _invalidMaterial = true;
 
@@ -83,10 +83,14 @@ public class Tile : MonoBehaviour
             _invalidMaterial = false;
             if (IsSolid) {
                 renderer.material = Level.WallMaterial;
+                renderer.sortingOrder = 3;
                 _overviewDummy.renderer.material = Level.SimpleWallMaterial;
+                _overviewDummy.renderer.sortingOrder = 3;
             } else if (!IsSolid) {
                 renderer.material = Level.BlankMaterial;
+                renderer.sortingOrder = 0;
                 _overviewDummy.renderer.material = Level.SimpleBlankMaterial;
+                _overviewDummy.renderer.sortingOrder = 0;
             }
         }
     }

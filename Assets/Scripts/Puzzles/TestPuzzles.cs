@@ -9,9 +9,9 @@ public class TestPuzzles
 {
     [Puzzle(
         name: "AND Gate",
-        desc: "Output RED if and only if both inputs are RED.",
+        desc: "Output RED if both inputs are RED, otherwise output BLUE.",
         diff: Difficulty.Trivial,
-        width: 27, height: 17,
+        width: 13, height: 13,
         inputPeriod: 2
     )]
     [Input("A", 0), Input("B", 2), Output("Q", 0)]

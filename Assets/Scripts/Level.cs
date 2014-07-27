@@ -92,7 +92,6 @@ public class Level : MonoBehaviour
         for (int x = 0; x < Width; ++x) {
             for (int y = 0; y < Height; ++y) {
                 var tile = _tiles[x + y * Width] = GameObject.CreatePrimitive(PrimitiveType.Quad);
-                Destroy(tile.GetComponent<MeshCollider>());
                 tile.transform.position = new Vector3(x - Width / 2f + .5f, y - Height / 2f + .5f);
 
                 var tComp = tile.AddComponent<Tile>();
@@ -155,6 +154,7 @@ public class Level : MonoBehaviour
             1
         );
         _overviewBounds.renderer.material = OverviewBoundsMaterial;
+        _overviewBounds.renderer.sortingOrder = 4;
 
         _dividerShadow = GameObject.CreatePrimitive(PrimitiveType.Quad);
         Destroy(_dividerShadow.GetComponent<MeshCollider>());
@@ -176,7 +176,6 @@ public class Level : MonoBehaviour
     public Computron CreateComputron(Tile tile, Direction dir, Spin state)
     {
         var quad = GameObject.CreatePrimitive(PrimitiveType.Quad);
-        Destroy(quad.GetComponent<MeshCollider>());
         quad.renderer.material = ComputronMaterial;
 
         var comp = quad.AddComponent<Computron>();

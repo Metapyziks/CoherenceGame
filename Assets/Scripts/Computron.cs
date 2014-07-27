@@ -42,6 +42,8 @@ public class Computron : MonoBehaviour
 
         void Start()
         {
+            Destroy(GetComponent<MeshCollider>());
+
             gameObject.layer = LayerMask.NameToLayer("Overview");
         }
 
@@ -55,7 +57,6 @@ public class Computron : MonoBehaviour
             if (Computron == null || Computron._isRemoved) return;
 
             renderer.material.SetFloat(Computron._stateID, Computron.State == Spin.Up ? 1 : 0);
-
             renderer.sortingOrder = Computron.State == Spin.Up ? 2 : 1;
 
             transform.position = Computron.GetCurrentPosition();
