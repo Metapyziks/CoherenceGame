@@ -73,6 +73,11 @@
                 return o;
             }
 
+            float edgeShadow(float diff, float mul)
+            {
+                return diff * 4 * mul + (1 - mul);
+            }
+
             float vertShadow(float2 coord, float2 vert, float mul)
             {
                 return min(1, length(coord - vert) * 4) * mul + (1 - mul);
@@ -80,28 +85,27 @@
 
             float4 frag(fragmentInput i) : COLOR
             {
-                float shad = 1;
+				float4 edgeShads = float4(
+					edgeShadow(i.texCoord.y, i.nbrsEdge.x),
+					edgeShadow(1 - i.texCoord.y, i.nbrsEdge.z),
+					edgeShadow(1 - i.texCoord.x, i.nbrsEdge.y),
+					edgeShadow(i.texCoord.x, i.nbrsEdge.w)
+				);
 
-                if (i.texCoord.y < 0.25) {
-                    shad *= i.texCoord.y * 4 * i.nbrsEdge.x + (1 - i.nbrsEdge.x);
-                } else if (i.texCoord.y >= 0.75) {
-                    shad *= (1 - i.texCoord.y) * 4 * i.nbrsEdge.z + (1 - i.nbrsEdge.z);
-                }
-                
-                if (i.texCoord.x >= 0.75) {
-                    shad *= (1 - i.texCoord.x) * 4 * i.nbrsEdge.y + (1 - i.nbrsEdge.y);
-                } else if (i.texCoord.x < 0.25) {
-                    shad *= i.texCoord.x * 4 * i.nbrsEdge.w + (1 - i.nbrsEdge.w);
-                }
+				float4 vertShads = float4(
+					vertShadow(i.texCoord, float2(0, 0), i.nbrsVert.x),
+                    vertShadow(i.texCoord, float2(1, 0), i.nbrsVert.y),
+                    vertShadow(i.texCoord, float2(1, 1), i.nbrsVert.z),
+                    vertShadow(i.texCoord, float2(0, 1), i.nbrsVert.w)
+				);
+				
+				edgeShads = min(edgeShads, float4(1, 1, 1, 1));
+				vertShads = min(vertShads, float4(1, 1, 1, 1));
 
-                if (shad == 1) {
-                    shad *= vertShadow(i.texCoord, float2(0, 0), i.nbrsVert.x)
-                        * vertShadow(i.texCoord, float2(1, 0), i.nbrsVert.y)
-                        * vertShadow(i.texCoord, float2(1, 1), i.nbrsVert.z)
-                        * vertShadow(i.texCoord, float2(0, 1), i.nbrsVert.w);
-                }
-
-                return float4(tex2D(_NoiseTex, i.screenPos).rgb * _Color.rgb * (0.8 + shad * 0.2), 1);
+				float edgeShad = edgeShads.x * edgeShads.y * edgeShads.z * edgeShads.w;
+				float vertShad = vertShads.x * vertShads.y * vertShads.z * vertShads.w;
+				
+                return float4(tex2D(_NoiseTex, i.screenPos).rgb * _Color.rgb * (0.8 + min(edgeShad, vertShad) * 0.2), 1);
             }
             ENDCG
         }
