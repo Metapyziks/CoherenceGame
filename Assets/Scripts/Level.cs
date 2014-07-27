@@ -64,6 +64,16 @@ public class Level : MonoBehaviour
             return _tiles[x + y * Width].GetComponent<Tile>();
         }
     }
+
+    public void ReloadPuzzle()
+    {
+        LoadPuzzle(Puzzle);
+    }
+
+    public void LoadPuzzle(string category, int index)
+    {
+        LoadPuzzle(Puzzle.GetPuzzlesInCategory(category)[index]);
+    }
     
     public void LoadPuzzle(Puzzle puzzle)
     {
@@ -140,6 +150,8 @@ public class Level : MonoBehaviour
 
     void Start()
     {
+        MainCamera.orthographicSize = 6 / MainCamera.aspect;
+
         _overviewBounds = GameObject.CreatePrimitive(PrimitiveType.Quad);
         Destroy(_overviewBounds.GetComponent<MeshCollider>());
         _overviewBounds.layer = LayerMask.NameToLayer("Overview");

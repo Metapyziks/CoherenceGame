@@ -30,6 +30,8 @@ public class PuzzleCategoryAttribute : Attribute
 [AttributeUsage(AttributeTargets.Class)]
 public class PuzzleAttribute : Attribute
 {
+    public int Index { get; private set; }
+
     public String Name { get; private set; }
 
     public String Description { get; private set; }
@@ -42,8 +44,9 @@ public class PuzzleAttribute : Attribute
 
     public int InputPeriod { get; private set; }
 
-    public PuzzleAttribute(String name, String desc, Difficulty diff, int width, int height, int inputPeriod = 2)
+    public PuzzleAttribute(int index, String name, String desc, Difficulty diff, int width, int height, int inputPeriod = 2)
     {
+        Index = index;
         Name = name;
         Description = desc;
         Difficulty = diff;
@@ -79,7 +82,7 @@ public class OutputAttribute : InputOutputAttribute
     public OutputAttribute(String name, int placement) : base(name, placement) { }
 }
 
-public abstract class Puzzle
+public abstract class Puzzle : IComparable<Puzzle>
 {
     private static Dictionary<String, List<Puzzle>> _sPuzzles
         = new Dictionary<string, List<Puzzle>>();
@@ -121,6 +124,7 @@ public abstract class Puzzle
 
                 var puzzle = (Puzzle) ctor.Invoke(new object[0]);
 
+                puzzle.Index = puz.Index;
                 puzzle.Name = puz.Name;
                 puzzle.Category = cat.CategoryName;
                 puzzle.Description = puz.Description;
@@ -150,6 +154,15 @@ public abstract class Puzzle
                 Register(puzzle);
             }
         }
+
+        foreach (var cat in _sPuzzles.Values) {
+            if (cat.Count == 0) continue;
+
+            if (cat.Any(x => cat.Any(y => x != y && x.Index == y.Index)
+                || (x.Index > 0 && !cat.Any(y => y.Index + 1 == x.Index)))) {
+                throw new Exception("Invalid puzzle indices in category " + cat.First().Category);
+            }
+        }
     }
 
     public static void Register(Puzzle puzzle)
@@ -159,6 +172,7 @@ public abstract class Puzzle
         }
 
         _sPuzzles[puzzle.Category].Add(puzzle);
+        _sPuzzles[puzzle.Category].Sort();
     }
 
     public static String[] GetCategories()
@@ -174,6 +188,8 @@ public abstract class Puzzle
 
         return _sPuzzles[category].ToArray();
     }
+
+    public int Index { get; private set; }
 
     public String Name { get; private set; }
 
@@ -237,4 +253,9 @@ public abstract class Puzzle
     }
 
     public abstract bool ShouldAccept(bool[] input, bool[] output);
+
+    public int CompareTo(Puzzle other)
+    {
+        return Index - other.Index;
+    }
 }

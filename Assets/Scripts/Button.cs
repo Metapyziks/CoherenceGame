@@ -14,7 +14,11 @@ public class Button : MonoBehaviour
 
     private bool _held;
 
+    public bool CanPress { get; set; }
+
     public MenuPanel MenuPanel { get; set; }
+
+    public Color32 DisabledColor = new Color32(0x4f, 0x4f, 0x4f, 0xff);
 
     public Color32 DefaultColor = new Color32(0x66, 0x66, 0x66, 0xff);
 
@@ -82,6 +86,8 @@ public class Button : MonoBehaviour
     {
         get
         {
+            if (!CanPress) return false;
+
             var pos = MenuPanel.GetCursorPosition();
 
             return pos.x >= RelativePosition.x - RelativeSize.x * .5f
@@ -95,12 +101,14 @@ public class Button : MonoBehaviour
     {
         get
         {
-            return MenuPanel.IsPlayerTouching && IsPlayerHovering;
+            return CanPress && MenuPanel.IsPlayerTouching && IsPlayerHovering;
         }
     }
 
     void Start()
     {
+        CanPress = true;
+
         _colorID = Shader.PropertyToID("_Color");
 
         Destroy(GetComponent<MeshCollider>());
@@ -124,7 +132,9 @@ public class Button : MonoBehaviour
 
     void OnWillRenderObject()
     {
-        if (IsPlayerTouching) {
+        if (!CanPress) {
+            renderer.material.SetColor(_colorID, DisabledColor);
+        } else if (IsPlayerTouching) {
             renderer.material.SetColor(_colorID, PressedColor);
         } else if (IsPlayerHovering) {
             renderer.material.SetColor(_colorID, HoverColor);

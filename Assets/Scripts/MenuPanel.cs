@@ -17,7 +17,8 @@ public class MenuPanel : MonoBehaviour
     private GUIText _titleTxt;
     private GUIText _descrTxt;
 
-    private Button _restartBtn;
+    private Button _prevBtn;
+    private Button _nextBtn;
 
     private bool _wasTouching;
 
@@ -137,10 +138,16 @@ public class MenuPanel : MonoBehaviour
         _descrTxt = CreateText(new Vector2(0.5f, 0.12f), TextAnchor.UpperCenter, TextAlignment.Left);
         _descrTxt.fontSize = 14;
 
-        _restartBtn = CreateButton(new Vector2(0.25f, 0.32f), new Vector2(0.45f, 0.1f));
-        _restartBtn.Text = "Restart";
-        _restartBtn.Pressed += (sender, e) => {
-            Level.LoadPuzzle(Level.Puzzle);
+        _prevBtn = CreateButton(new Vector2(0.275f, 0.32f), new Vector2(0.425f, 0.1f));
+        _prevBtn.Text = "Prev";
+        _prevBtn.Pressed += (sender, e) => {
+            Level.LoadPuzzle(Level.Puzzle.Category, Level.Puzzle.Index - 1);
+        };
+
+        _nextBtn = CreateButton(new Vector2(0.725f, 0.32f), new Vector2(0.425f, 0.1f));
+        _nextBtn.Text = "Next";
+        _nextBtn.Pressed += (sender, e) => {
+            Level.LoadPuzzle(Level.Puzzle.Category, Level.Puzzle.Index + 1);
         };
     }
 
@@ -160,6 +167,9 @@ public class MenuPanel : MonoBehaviour
 
             _titleTxt.text = Level.Puzzle.Name;
             _descrTxt.SetTextWithWrapping(Level.Puzzle.Description, FindWidth(0.95f));
+
+            _prevBtn.CanPress = Level.Puzzle.Index > 0;
+            _nextBtn.CanPress = Level.Puzzle.Index < Puzzle.GetPuzzlesInCategory(Level.Puzzle.Category).Length - 1;
         }
     }
 }
