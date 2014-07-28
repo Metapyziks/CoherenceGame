@@ -224,6 +224,17 @@ public abstract class Puzzle : IComparable<Puzzle>
 
     public String[] OutputNames { get; private set; }
 
+    public bool Solved
+    {
+        get { return PlayerPrefs.HasKey(SolvedKeyName) && PlayerPrefs.GetInt(SolvedKeyName) > 0; }
+        set { PlayerPrefs.SetInt(SolvedKeyName, value ? 1 : 0); }
+    }
+
+    public String SolvedKeyName
+    {
+        get { return SaveKeyName + "." + "Solved"; }
+    }
+
     public String SaveKeyName
     {
         get { return Category.Replace(" ", "") + "." + Name.Replace(" ", ""); }
@@ -239,22 +250,22 @@ public abstract class Puzzle : IComparable<Puzzle>
                 .ToArray();
         }
     }
-    
-    public virtual IEnumerable<bool> ShouldAccept(IEnumerable<Spin[]> inputs, IEnumerable<Spin[]> outputs)
+
+    public virtual int GetExpectedOutputCount(IEnumerable<Spin[]> input)
     {
-        var inpIter = inputs.GetEnumerator();
+        return input.Count();
+    }
+    
+    public virtual bool ShouldAccept(IEnumerable<Spin[]> inputs, IEnumerable<Spin[]> outputs)
+    {
+        var inIter = inputs.GetEnumerator();
         var outIter = outputs.GetEnumerator();
 
-        while (inpIter.MoveNext()) {
-            if (!outIter.MoveNext()) {
-                yield return false;
-                yield break;
-            }
-
-            yield return ShouldAccept(inpIter.Current, outIter.Current);
+        while (inIter.MoveNext() && outIter.MoveNext()) {
+            if (!ShouldAccept(inIter.Current, outIter.Current)) return false;
         }
 
-        if (outIter.MoveNext()) yield return false;
+        return !(inIter.MoveNext() || outIter.MoveNext());
     }
 
     public virtual bool ShouldAccept(Spin[] input, Spin[] output)

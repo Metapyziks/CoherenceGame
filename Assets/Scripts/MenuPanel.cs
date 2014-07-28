@@ -17,11 +17,15 @@ public class MenuPanel : MonoBehaviour
     private GUIText _titleTxt;
     private GUIText _descrTxt;
 
+    private GUIText _passTxt;
+
     private Button _prevBtn;
     private Button _nextBtn;
 
     private Button _playBtn;
     private Button _pulseBtn;
+
+    private Button _testBtn;
 
     private Button _cheatBtn;
 
@@ -144,13 +148,13 @@ public class MenuPanel : MonoBehaviour
         _descrTxt.fontSize = 14;
 
         _prevBtn = CreateButton(new Vector2(0.275f, 0.32f), new Vector2(0.425f, 0.1f));
-        _prevBtn.Text = "Prev";
+        _prevBtn.Text = "Prev Puzzle";
         _prevBtn.Pressed += (sender, e) => {
             Level.LoadPuzzle(Level.Puzzle.Category, Level.Puzzle.Index - 1);
         };
 
         _nextBtn = CreateButton(new Vector2(0.725f, 0.32f), new Vector2(0.425f, 0.1f));
-        _nextBtn.Text = "Next";
+        _nextBtn.Text = "Next Puzzle";
         _nextBtn.Pressed += (sender, e) => {
             Level.LoadPuzzle(Level.Puzzle.Category, Level.Puzzle.Index + 1);
         };
@@ -172,7 +176,16 @@ public class MenuPanel : MonoBehaviour
                 : PulseMode.Continuous;
         };
 
-        _cheatBtn = CreateButton(new Vector2(0.5f, 0.56f), new Vector2(0.875f, 0.1f));
+        _testBtn = CreateButton(new Vector2(0.5f, 0.56f), new Vector2(0.875f, 0.1f));
+        _testBtn.Pressed += (sender, e) => {
+            if (!Level.IsTesting) {
+                Level.StartTesting();
+            } else {
+                Level.StopTesting();
+            }
+        };
+
+        _cheatBtn = CreateButton(new Vector2(0.5f, 0.68f), new Vector2(0.875f, 0.1f));
         _cheatBtn.Text = "[CHEAT] Example Solution";
         _cheatBtn.Pressed += (sender, e) => {
             if (Level.Puzzle.Solution == null) return;
@@ -180,6 +193,9 @@ public class MenuPanel : MonoBehaviour
             PlayerPrefs.SetString(Level.Puzzle.SaveKeyName, Level.Puzzle.Solution);
             Level.LoadSave();
         };
+
+        _passTxt = CreateText(new Vector2(0.5f, 0.8f), TextAnchor.MiddleCenter, TextAlignment.Center);
+        _passTxt.fontSize = 24;
     }
 
     void Update()
@@ -200,12 +216,27 @@ public class MenuPanel : MonoBehaviour
             _descrTxt.SetTextWithWrapping(Level.Puzzle.Description, FindWidth(0.95f));
 
             _prevBtn.CanPress = Level.Puzzle.Index > 0;
-            _nextBtn.CanPress = Level.Puzzle.Index < Puzzle.GetPuzzlesInCategory(Level.Puzzle.Category).Length - 1;
 
-            _cheatBtn.CanPress = Level.Puzzle.Solution != null;
+            _cheatBtn.CanPress = false; // Level.Puzzle.Solution != null;
         }
+
+        _pulseBtn.CanPress = !Level.IsTesting;
+
+        _nextBtn.CanPress = Level.Puzzle.Solved &&
+            Level.Puzzle.Index < Puzzle.GetPuzzlesInCategory(Level.Puzzle.Category).Length - 1;
 
         _pulseBtn.Text = Level.PulseMode != PulseMode.Continuous ? "Single" : "Continuous";
         _playBtn.Text = Level.IsRunning ? "Pause" : "Play";
+        _testBtn.Text = Level.IsTesting
+            ? "Abort Test"
+            : "Test Solution";
+
+        _passTxt.text = Level.IsTesting
+            ? "Testing (" + Level.CompletedOutputs + "/" + Level.ExpectedOutputs + ")"
+            : Level.Puzzle.Solved ? "SOLVED" : "NOT SOLVED";
+        _passTxt.fontSize = 24;
+        _passTxt.material.color = Level.Puzzle.Solved
+            ? new Color32(0x33, 0xff, 0x33, 0x7f)
+            : new Color32(0xff, 0x33, 0x33, 0x7f);
     }
 }

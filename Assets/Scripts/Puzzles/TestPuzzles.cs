@@ -81,7 +81,7 @@ public class TestPuzzles
 
     [Puzzle(
         index: 4,
-        name: "Only Red",
+        name: "Only RED",
         desc: "Output one RED for each input of either color.",
         diff: Difficulty.Easy,
         width: 13, height: 13,
@@ -99,7 +99,7 @@ public class TestPuzzles
 
     [Puzzle(
         index: 5,
-        name: "No blues",
+        name: "No BLUE",
         desc: "Output anything for a RED input, but nothing for a BLUE one.",
         diff: Difficulty.Easy,
         width: 13, height: 13,
@@ -109,23 +109,14 @@ public class TestPuzzles
     [Input("A", 0), Output("Q", 0)]
     public class NoBlues : Puzzle
     {
-        public override IEnumerable<bool> ShouldAccept(IEnumerable<Spin[]> inputs, IEnumerable<Spin[]> outputs)
+        public override int GetExpectedOutputCount(IEnumerable<Spin[]> input)
         {
-            var inpIter = inputs.GetEnumerator();
-            var outIter = outputs.GetEnumerator();
+            return input.Count(x => x[0] == Spin.Up);
+        }
 
-            while (inpIter.MoveNext()) {
-                if (inpIter.Current[0] == Spin.Down) continue;
-
-                if (!outIter.MoveNext()) {
-                    yield return false;
-                    yield break;
-                }
-
-                yield return outIter.Current[0] != Spin.None;
-            }
-
-            if (outIter.MoveNext()) yield return false;
+        public override bool ShouldAccept(IEnumerable<Spin[]> inputs, IEnumerable<Spin[]> outputs)
+        {
+            return outputs.Count() == inputs.Count(x => x[0] == Spin.Up);
         }
     }
 
@@ -134,14 +125,14 @@ public class TestPuzzles
         name: "Sandbox",
         desc: "Try to break the game.",
         diff: Difficulty.Extreme,
-        width: 33, height: 33,
+        width: 25, height: 25,
         inputPeriod: 2
     )]
     [Input("A1", 0), Input("A2", 2), Input("A3", 4), Input("A4", 6), Input("B1", 10), Input("B2", 12), Input("B3", 14), Input("B4", 16)]
     [Output("Q1", 0), Output("Q2", 2), Output("Q3", 4), Output("Q4", 6)]
     public class Sandbox : Puzzle
     {
-        public override bool ShouldAccept(Spin[] input, Spin[] output)
+        public override bool ShouldAccept(IEnumerable<Spin[]> inputs, IEnumerable<Spin[]> outputs)
         {
             return true;
         }

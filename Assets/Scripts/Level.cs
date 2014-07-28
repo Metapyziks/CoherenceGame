@@ -23,6 +23,9 @@ public class Level : MonoBehaviour
     private List<Computron> _computrons;
 
     private IEnumerator<Spin[]> _inputIter;
+    private Spin[][] _inputQueue;
+    private List<Spin[]> _pastInputs;
+    private List<Spin[]> _pastOutputs;
 
     private bool _touching;
     private bool _placing;
@@ -57,6 +60,8 @@ public class Level : MonoBehaviour
 
     public bool IsRunning { get; private set; }
 
+    public bool IsTesting { get; private set;}
+
     public float StepSpeed { get; set; }
 
     public PulseMode PulseMode { get; set; }
@@ -64,6 +69,22 @@ public class Level : MonoBehaviour
     public float Delta { get; private set; }
 
     public int Steps { get; private set; }
+
+    public int ExpectedOutputs
+    {
+        get
+        {
+            return _inputQueue == null ? 0 : Puzzle.GetExpectedOutputCount(_inputQueue);
+        }
+    }
+
+    public int CompletedOutputs
+    {
+        get
+        {
+            return _pastOutputs == null ? 0 : _pastOutputs.Count;
+        }
+    }
 
     public Tile this[int x, int y]
     {
@@ -127,6 +148,8 @@ public class Level : MonoBehaviour
     
     public void LoadPuzzle(Puzzle puzzle)
     {
+        if (IsTesting) StopTesting();
+
         if (Puzzle != null) {
             SavePuzzle();
         }
@@ -192,7 +215,7 @@ public class Level : MonoBehaviour
         for (int i = 0; i < Puzzle.OutputCount; ++i) {
             int y = Puzzle.OutputLocations[i];
 
-            OutputTiles[i] = this[0, y];
+            OutputTiles[i] = this[Width - 1, y];
 
             this[Width - 1, y].IsSolid = false;
             this[Width - 2, y].IsSolid = false;
@@ -255,7 +278,9 @@ public class Level : MonoBehaviour
             if (Puzzle.GetCategories().Contains(catName)) {
                 var index = PlayerPrefs.GetInt("PuzzleIndex");
                 if (Puzzle.GetPuzzlesInCategory(catName).Length > index) {
-                    LoadPuzzle(catName, index);
+                    if (index == 0 || Puzzle.GetPuzzlesInCategory(catName)[index - 1].Solved) {
+                        LoadPuzzle(catName, index);
+                    }
                 }
             }
         }
@@ -368,8 +393,58 @@ public class Level : MonoBehaviour
         IsRunning = false;
     }
 
+    public void StartTesting()
+    {
+        if (IsTesting) return;
+
+        foreach (var comp in _computrons) {
+            Destroy(comp.gameObject);
+        }
+
+        _computrons.Clear();
+
+        StepSpeed = 8f;
+        IsTesting = true;
+        PulseMode = PulseMode.Continuous;
+
+        _inputQueue = Puzzle.GenerateInputs(null, 10).ToArray();
+        _inputIter = _inputQueue.AsEnumerable<Spin[]>().GetEnumerator();
+
+        _pastInputs = new List<Spin[]>();
+        _pastOutputs = new List<Spin[]>();
+
+        StartRunning();
+    }
+
+    public void StopTesting()
+    {
+        if (!IsTesting) return;
+
+        if (_computrons.Count == 0 &&
+            _pastInputs.Count == _inputQueue.Length &&
+            CompletedOutputs == ExpectedOutputs &&
+            Puzzle.ShouldAccept(_inputQueue, _pastOutputs)) {
+            Puzzle.Solved = true;
+        }
+
+        foreach (var comp in _computrons) {
+            Destroy(comp.gameObject);
+        }
+
+        _computrons.Clear();
+
+        StepSpeed = 2f;
+        IsTesting = false;
+
+        _inputIter = Puzzle.GenerateInputs(null, 0).GetEnumerator();
+
+        StopRunning();
+    }
+
     void Update()
     {
+        if (IsTesting) return;
+
         if (Input.touchCount > 0) {
             Touch(Input.touches[0].position);
             _touching = true;
@@ -392,7 +467,7 @@ public class Level : MonoBehaviour
         if (Delta >= 1f) {
             Delta = 0f;
             ++Steps;
-
+            
             var updates = new Dictionary<Tile, List<Computron>>();
 
             foreach (var comp in _computrons) {
@@ -404,6 +479,13 @@ public class Level : MonoBehaviour
                 }
 
                 updates[tile].Add(comp);
+            }
+
+            if (IsTesting && updates.Keys.Any(x => OutputTiles.Contains(x))) {
+                _pastOutputs.Add(OutputTiles.Select(t => {
+                    var c = _computrons.FirstOrDefault(x => x.Tile == t);
+                    return c == null ? Spin.None : c.State;
+                }).ToArray());
             }
 
             foreach (var pair in updates) {
@@ -431,6 +513,8 @@ public class Level : MonoBehaviour
             if (Steps % (Puzzle.InputPeriod * 2) == 0 && PulseMode != PulseMode.None && _inputIter.MoveNext()) {
                 var input = _inputIter.Current;
 
+                if (IsTesting) _pastInputs.Add(input);
+
                 if (PulseMode == PulseMode.Single) {
                     PulseMode = PulseMode.None;
                 }
@@ -439,6 +523,10 @@ public class Level : MonoBehaviour
                     if (input[i] == Spin.None) continue;
                     CreateComputron(InputTiles[i], Direction.Right, input[i]);
                 }
+            }
+
+            if (IsTesting && _computrons.Count == 0 && _pastInputs.Count == _inputQueue.Length) {
+                StopTesting();
             }
 
             if (_computrons.Count == 0 && PulseMode == PulseMode.None) {
