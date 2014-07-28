@@ -14,6 +14,7 @@
         Pass
         {
             ZWrite Off
+            ZTest Always
 
             CGPROGRAM
             #pragma target 3.0

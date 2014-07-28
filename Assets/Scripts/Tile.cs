@@ -93,6 +93,8 @@ public class Tile : MonoBehaviour
                 _overviewDummy.renderer.sortingOrder = 0;
             }
         }
+
+        renderer.material.SetFloat(_neighboursID, Neighbours / 255f);
     }
 
     public void OnDestroy()
@@ -101,12 +103,7 @@ public class Tile : MonoBehaviour
             Destroy(_overviewDummy);
         }
     }
-
-    void OnWillRenderObject()
-    {
-        renderer.material.SetFloat(_neighboursID, Neighbours / 255f);
-    }
-
+    
     public Tile GetNeighbour(Direction dir)
     {
         switch (dir) {

@@ -78,60 +78,30 @@ public class Level : MonoBehaviour
             return _tiles[x + y * Width].GetComponent<Tile>();
         }
     }
-
-    public string GetSavePath()
-    {
-        return Path.Combine("saves", string.Format("{0}-{1}.sav", Puzzle.Category, Puzzle.Index));
-    }
-
+        
     public void SavePuzzle()
     {
-        var path = GetSavePath();
-        var direc = Path.GetDirectoryName(path);
-
-        if (!Directory.Exists(direc)) {
-            Directory.CreateDirectory(direc);
-        }
-
-        using (var writer = new BinaryWriter(File.OpenWrite(path))) {
-            writer.Write(Puzzle.Category);
-            writer.Write(Puzzle.Index);
-            writer.Write(Puzzle.Name);
-            writer.Write(Puzzle.Width);
-            writer.Write(Puzzle.Height);
-            writer.Write(Puzzle.InputCount);
-            writer.Write(Puzzle.OutputCount);
-
-            for (int y = 0; y < Puzzle.Height; ++y) {
-                for (int x = 0; x < Puzzle.Width; ++x) {
-                    writer.Write(this[x, y].IsSolid);
-                }
-            }
+        try {
+            BinarySaveLoad.SaveArray(Puzzle.SaveKeyName,
+                _tiles.Select(x => x.GetComponent<Tile>().IsSolid).ToArray());
+        } catch {
+            Debug.Log("Error encountered when trying to save \"" + Puzzle.SaveKeyName + "\"");
         }
     }
 
     public void LoadSave()
     {
-        if (File.Exists(GetSavePath())) {
-            try {
-                using (var reader = new BinaryReader(File.OpenRead(GetSavePath()))) {
-                    if (!reader.ReadString().Equals(Puzzle.Category)) return;
-                    if (!reader.ReadInt32().Equals(Puzzle.Index)) return;
-                    if (!reader.ReadString().Equals(Puzzle.Name)) return;
-                    if (!reader.ReadInt32().Equals(Puzzle.Width)) return;
-                    if (!reader.ReadInt32().Equals(Puzzle.Height)) return;
-                    if (!reader.ReadInt32().Equals(Puzzle.InputCount)) return;
-                    if (!reader.ReadInt32().Equals(Puzzle.OutputCount)) return;
+        try {
+            var states = BinarySaveLoad.LoadBooleanArray(Puzzle.SaveKeyName, _tiles.Length);
+            if (states == null) return;
 
-                    for (int y = 0; y < Puzzle.Height; ++y) {
-                        for (int x = 0; x < Puzzle.Width; ++x) {
-                            this[x,y].IsSolid = reader.ReadBoolean();
-                        }
-                    }
-                }
-            } catch {
-                Debug.Log("Error encountered when trying to load save \"" + GetSavePath() + "\"");
+            for (int i = 0; i < _tiles.Length; ++i) {
+                var tile = _tiles[i].GetComponent<Tile>();
+
+                if (tile.IsEditable) tile.IsSolid = states[i];
             }
+        } catch {
+            Debug.Log("Error encountered when trying to load \"" + Puzzle.SaveKeyName + "\"");
         }
     }
 
@@ -265,11 +235,32 @@ public class Level : MonoBehaviour
         _backPlane.renderer.material = BackPlaneMaterial;
         _backPlane.renderer.sortingOrder = -1;
 
-        LoadPuzzle(Puzzle.GetPuzzlesInCategory("Test").First());
+        if (PlayerPrefs.HasKey("CategoryName")) {
+            var catName = PlayerPrefs.GetString("CategoryName");
+
+            if (Puzzle.GetCategories().Contains(catName)) {
+                var index = PlayerPrefs.GetInt("PuzzleIndex");
+                if (Puzzle.GetPuzzlesInCategory(catName).Length > index) {
+                    LoadPuzzle(catName, index);
+                }
+            }
+        }
+
+        if (Puzzle == null) LoadPuzzle(Puzzle.GetPuzzlesInCategory("Test").First());
 
         SetCameraPosition(MainCamera, new Vector2(-Width / 2f, InputTiles.Average(x => x.transform.position.y)));
 
         StepSpeed = 2;
+    }
+
+    void OnApplicationQuit()
+    {
+        if (Puzzle != null) {
+            SavePuzzle();
+
+            PlayerPrefs.SetString("CategoryName", Puzzle.Category);
+            PlayerPrefs.SetInt("PuzzleIndex", Puzzle.Index);
+        }
     }
 
     public Computron CreateComputron(Tile tile, Direction dir, Spin state)

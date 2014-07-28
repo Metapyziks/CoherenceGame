@@ -216,6 +216,11 @@ public abstract class Puzzle : IComparable<Puzzle>
     public String[] InputNames { get; private set; }
 
     public String[] OutputNames { get; private set; }
+
+    public String SaveKeyName
+    {
+        get { return Category.Replace(" ", "") + "." + Name.Replace(" ", ""); }
+    }
     
     public virtual IEnumerable<Spin[]> GenerateInputs(System.Random rand, int count)
     {
@@ -227,15 +232,8 @@ public abstract class Puzzle : IComparable<Puzzle>
                 .ToArray();
         }
     }
-
-    public bool ShouldAccept(Spin[] input, Spin[] output)
-    {
-        return ShouldAccept(
-            input.Select(x => x == Spin.Up).ToArray(),
-            output.Select(x => x == Spin.Up).ToArray());
-    }
-
-    public virtual IEnumerable<bool> ShouldAccept(IEnumerable<bool[]> inputs, IEnumerable<bool[]> outputs)
+    
+    public virtual IEnumerable<bool> ShouldAccept(IEnumerable<Spin[]> inputs, IEnumerable<Spin[]> outputs)
     {
         var inpIter = inputs.GetEnumerator();
         var outIter = outputs.GetEnumerator();
@@ -252,7 +250,10 @@ public abstract class Puzzle : IComparable<Puzzle>
         if (outIter.MoveNext()) yield return false;
     }
 
-    public abstract bool ShouldAccept(bool[] input, bool[] output);
+    public virtual bool ShouldAccept(Spin[] input, Spin[] output)
+    {
+        return false;
+    }
 
     public int CompareTo(Puzzle other)
     {

@@ -11,6 +11,7 @@
         Pass
         {
             ZWrite Off
+            ZTest Always
 
             CGPROGRAM
             #pragma vertex vert
