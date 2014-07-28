@@ -20,8 +20,8 @@ public class MenuPanel : MonoBehaviour
     private Button _prevBtn;
     private Button _nextBtn;
 
-    private Button _pulseBtn;
     private Button _playBtn;
+    private Button _pulseBtn;
 
     private bool _wasTouching;
 
@@ -153,21 +153,21 @@ public class MenuPanel : MonoBehaviour
             Level.LoadPuzzle(Level.Puzzle.Category, Level.Puzzle.Index + 1);
         };
 
-        _pulseBtn = CreateButton(new Vector2(0.275f, 0.44f), new Vector2(0.425f, 0.1f));
-        _pulseBtn.Text = "Single Input";
-        _pulseBtn.Pressed += (sender, e) => {
-            Level.PulseMode = Level.PulseMode == PulseMode.Continuous
-                ? PulseMode.Single
-                : PulseMode.Continuous;
-        };
-
-        _playBtn = CreateButton(new Vector2(0.725f, 0.44f), new Vector2(0.425f, 0.1f));
+        _playBtn = CreateButton(new Vector2(0.275f, 0.44f), new Vector2(0.425f, 0.1f));
         _playBtn.Pressed += (sender, e) => {
             if (Level.IsRunning) {
                 Level.StopRunning();
             } else {
                 Level.StartRunning();
             }
+        };
+
+        _pulseBtn = CreateButton(new Vector2(0.725f, 0.44f), new Vector2(0.425f, 0.1f));
+        _pulseBtn.Text = "Single Input";
+        _pulseBtn.Pressed += (sender, e) => {
+            Level.PulseMode = Level.PulseMode == PulseMode.Continuous
+                ? PulseMode.Single
+                : PulseMode.Continuous;
         };
     }
 
@@ -193,6 +193,6 @@ public class MenuPanel : MonoBehaviour
         }
 
         _pulseBtn.Text = Level.PulseMode != PulseMode.Continuous ? "Single" : "Continuous";
-        _playBtn.Text = Level.IsRunning ? "Stop" : "Start";
+        _playBtn.Text = Level.IsRunning ? "Pause" : "Play";
     }
 }
