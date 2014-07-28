@@ -20,6 +20,9 @@ public class MenuPanel : MonoBehaviour
     private Button _prevBtn;
     private Button _nextBtn;
 
+    private Button _pulseBtn;
+    private Button _playBtn;
+
     private bool _wasTouching;
 
     public bool IsPlayerTouching
@@ -149,6 +152,23 @@ public class MenuPanel : MonoBehaviour
         _nextBtn.Pressed += (sender, e) => {
             Level.LoadPuzzle(Level.Puzzle.Category, Level.Puzzle.Index + 1);
         };
+
+        _pulseBtn = CreateButton(new Vector2(0.275f, 0.44f), new Vector2(0.425f, 0.1f));
+        _pulseBtn.Text = "Single Input";
+        _pulseBtn.Pressed += (sender, e) => {
+            Level.PulseMode = Level.PulseMode == PulseMode.Continuous
+                ? PulseMode.Single
+                : PulseMode.Continuous;
+        };
+
+        _playBtn = CreateButton(new Vector2(0.725f, 0.44f), new Vector2(0.425f, 0.1f));
+        _playBtn.Pressed += (sender, e) => {
+            if (Level.IsRunning) {
+                Level.StopRunning();
+            } else {
+                Level.StartRunning();
+            }
+        };
     }
 
     void Update()
@@ -171,5 +191,8 @@ public class MenuPanel : MonoBehaviour
             _prevBtn.CanPress = Level.Puzzle.Index > 0;
             _nextBtn.CanPress = Level.Puzzle.Index < Puzzle.GetPuzzlesInCategory(Level.Puzzle.Category).Length - 1;
         }
+
+        _pulseBtn.Text = Level.PulseMode != PulseMode.Continuous ? "Single" : "Continuous";
+        _playBtn.Text = Level.IsRunning ? "Stop" : "Start";
     }
 }

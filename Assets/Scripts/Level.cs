@@ -4,8 +4,30 @@ using System.Collections;
 using System.Linq;
 using System.Collections.Generic;
 
+public enum PulseMode
+{
+    None = 0,
+    Single = 1,
+    Continuous = 2
+}
+
 public class Level : MonoBehaviour
 {
+    private GameObject _overviewBounds;
+    private GameObject _dividerShadow;
+    private GameObject _backPlane;
+
+    private GameObject[] _tiles;
+
+    private List<Computron> _computrons;
+
+    private IEnumerator<Spin[]> _inputIter;
+
+    private bool _touching;
+    private bool _placing;
+    private bool _dragging;
+    private bool _makeSolid;
+
     public Puzzle Puzzle { get; private set; }
 
     public int Width { get { return Puzzle.Width; } }
@@ -28,24 +50,15 @@ public class Level : MonoBehaviour
     public Camera MainCamera;
     public Camera OverviewCamera;
 
-    private GameObject _overviewBounds;
-    private GameObject _dividerShadow;
-    private GameObject _backPlane;
-
-    private GameObject[] _tiles;
-
-    private List<Computron> _computrons;
-
-    private IEnumerator<Spin[]> _inputIter;
-
-    private bool _touching;
-    private bool _placing;
-    private bool _dragging;
-    private bool _makeSolid;
-
     public Tile[] InputTiles { get; private set; }
 
     public Tile[] OutputTiles { get; private set; }
+
+    public bool IsRunning { get; private set; }
+
+    public float StepSpeed { get; set; }
+
+    public PulseMode PulseMode { get; set; }
 
     public float Delta { get; private set; }
 
@@ -77,34 +90,43 @@ public class Level : MonoBehaviour
     
     public void LoadPuzzle(Puzzle puzzle)
     {
-        if (_tiles != null) {
+        if (_computrons != null) {
             foreach (var computron in _computrons) {
                 Destroy(computron.gameObject);
             }
+        }
 
+        // TODO: Save as many tiles as possible from being destroyed
+        if (_tiles != null && _tiles.Length != puzzle.Width * puzzle.Height) {
             foreach (var tile in _tiles) {
                 Destroy(tile.gameObject);
             }
+
+            _tiles = null;
         }
 
         Delta = 0f;
         Steps = 0;
 
+        IsRunning = false;
+
         Puzzle = puzzle;
 
         _inputIter = Puzzle.GenerateInputs(null, 0).GetEnumerator();
 
-        _tiles = new GameObject[Width * Height];
+        _tiles = _tiles ?? new GameObject[Width * Height];
         _computrons = new List<Computron>();
 
         OverviewCamera.orthographicSize = Mathf.Max(Height / 2f, Width / 2f / OverviewCamera.aspect) + 0.5f;
 
         for (int x = 0; x < Width; ++x) {
             for (int y = 0; y < Height; ++y) {
-                var tile = _tiles[x + y * Width] = GameObject.CreatePrimitive(PrimitiveType.Quad);
+                var tile = _tiles[x + y * Width] = _tiles[x + y * Width]
+                    ?? GameObject.CreatePrimitive(PrimitiveType.Quad);
+
                 tile.transform.position = new Vector3(x - Width / 2f + .5f, y - Height / 2f + .5f);
 
-                var tComp = tile.AddComponent<Tile>();
+                var tComp = tile.GetComponent<Tile>() ?? tile.AddComponent<Tile>();
                 tComp.Level = this;
                 tComp.X = x;
                 tComp.Y = y;
@@ -142,7 +164,7 @@ public class Level : MonoBehaviour
                 this[x, y].FindNeighbours();
             }
         }
-        
+
         _backPlane.transform.localScale = new Vector3(
             OverviewCamera.orthographicSize * OverviewCamera.aspect * 2,
             OverviewCamera.orthographicSize * 2, 1);
@@ -183,6 +205,8 @@ public class Level : MonoBehaviour
         LoadPuzzle(Puzzle.GetPuzzlesInCategory("Test").First());
 
         SetCameraPosition(MainCamera, new Vector2(-Width / 2f, InputTiles.Average(x => x.transform.position.y)));
+
+        StepSpeed = 2;
     }
 
     public Computron CreateComputron(Tile tile, Direction dir, Spin state)
@@ -260,6 +284,24 @@ public class Level : MonoBehaviour
         }
     }
 
+    public void StartRunning()
+    {
+        if (_computrons.Count == 0) {
+            Steps = -1;
+
+            if (PulseMode != PulseMode.Continuous) {
+                PulseMode = PulseMode.Single;
+            }
+        }
+
+        IsRunning = true;
+    }
+
+    public void StopRunning()
+    {
+        IsRunning = false;
+    }
+
     void Update()
     {
         if (Input.touchCount > 0) {
@@ -277,7 +319,9 @@ public class Level : MonoBehaviour
 
     void FixedUpdate()
     {
-        Delta += 2f / 60f;
+        if (!IsRunning) return;
+
+        Delta += StepSpeed / 60f;
 
         if (Delta >= 1f) {
             Delta = 0f;
@@ -318,13 +362,21 @@ public class Level : MonoBehaviour
                 comp.State = comp.NextState;
             }
 
-            if (Steps % (Puzzle.InputPeriod * 2) == 0 && _inputIter.MoveNext()) {
+            if (Steps % (Puzzle.InputPeriod * 2) == 0 && PulseMode != PulseMode.None && _inputIter.MoveNext()) {
                 var input = _inputIter.Current;
+
+                if (PulseMode == PulseMode.Single) {
+                    PulseMode = PulseMode.None;
+                }
 
                 for (int i = 0; i < input.Length; ++i) {
                     if (input[i] == Spin.None) continue;
                     CreateComputron(InputTiles[i], Direction.Right, input[i]);
                 }
+            }
+
+            if (_computrons.Count == 0 && PulseMode == PulseMode.None) {
+                StopRunning();
             }
         }
     }
