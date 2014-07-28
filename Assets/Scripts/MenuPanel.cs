@@ -23,6 +23,8 @@ public class MenuPanel : MonoBehaviour
     private Button _playBtn;
     private Button _pulseBtn;
 
+    private Button _cheatBtn;
+
     private bool _wasTouching;
 
     public bool IsPlayerTouching
@@ -169,6 +171,15 @@ public class MenuPanel : MonoBehaviour
                 ? PulseMode.Single
                 : PulseMode.Continuous;
         };
+
+        _cheatBtn = CreateButton(new Vector2(0.5f, 0.56f), new Vector2(0.875f, 0.1f));
+        _cheatBtn.Text = "[CHEAT] Example Solution";
+        _cheatBtn.Pressed += (sender, e) => {
+            if (Level.Puzzle.Solution == null) return;
+
+            PlayerPrefs.SetString(Level.Puzzle.SaveKeyName, Level.Puzzle.Solution);
+            Level.LoadSave();
+        };
     }
 
     void Update()
@@ -190,6 +201,8 @@ public class MenuPanel : MonoBehaviour
 
             _prevBtn.CanPress = Level.Puzzle.Index > 0;
             _nextBtn.CanPress = Level.Puzzle.Index < Puzzle.GetPuzzlesInCategory(Level.Puzzle.Category).Length - 1;
+
+            _cheatBtn.CanPress = Level.Puzzle.Solution != null;
         }
 
         _pulseBtn.Text = Level.PulseMode != PulseMode.Continuous ? "Single" : "Continuous";

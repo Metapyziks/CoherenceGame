@@ -13,7 +13,8 @@ public class TestPuzzles
         desc: "Output RED for BLUE inputs, and output BLUE for RED inputs.",
         diff: Difficulty.Trivial,
         width: 13, height: 13,
-        inputPeriod: 2
+        inputPeriod: 2,
+        solution: "//////////8fPwh4////////////AQ=="
     )]
     [Input("A", 0), Output("Q", 0)]
     public class Invert : Puzzle
@@ -30,7 +31,8 @@ public class TestPuzzles
         desc: "Output RED if either input is RED, otherwise output BLUE.",
         diff: Difficulty.Trivial,
         width: 13, height: 13,
-        inputPeriod: 2
+        inputPeriod: 2,
+        solution: "//////////8B/w8A/P//////////AQ=="
     )]
     [Input("A", 0), Input("B", 2), Output("Q", 0)]
     public class OrGate : Puzzle
@@ -47,7 +49,8 @@ public class TestPuzzles
         desc: "Output RED if both inputs are RED, otherwise output BLUE.",
         diff: Difficulty.Trivial,
         width: 13, height: 13,
-        inputPeriod: 2
+        inputPeriod: 2,
+        solution: "//////////2B+EcA+t//////////AQ=="
     )]
     [Input("A", 0), Input("B", 2), Output("Q", 0)]
     public class AndGate : Puzzle
@@ -64,7 +67,8 @@ public class TestPuzzles
         desc: "Output RED if only one input is RED, otherwise output BLUE.",
         diff: Difficulty.Easy,
         width: 13, height: 13,
-        inputPeriod: 2
+        inputPeriod: 2,
+        solution: "/////////+hB/CMA8Y/+////////AQ=="
     )]
     [Input("A", 0), Input("B", 2), Output("Q", 0)]
     public class XorGate : Puzzle
@@ -81,7 +85,8 @@ public class TestPuzzles
         desc: "Output one RED for each input of either color.",
         diff: Difficulty.Easy,
         width: 13, height: 13,
-        inputPeriod: 2
+        inputPeriod: 2,
+        solution: "//////////8fPwh4/L//////////AQ=="
     )]
     [Input("A", 0), Output("Q", 0)]
     public class OnlyRed : Puzzle
@@ -98,7 +103,8 @@ public class TestPuzzles
         desc: "Output anything for a RED input, but nothing for a BLUE one.",
         diff: Difficulty.Easy,
         width: 13, height: 13,
-        inputPeriod: 2
+        inputPeriod: 2,
+        solution: "//////////8HPy5Y8KP+////////AQ=="
     )]
     [Input("A", 0), Output("Q", 0)]
     public class NoBlues : Puzzle

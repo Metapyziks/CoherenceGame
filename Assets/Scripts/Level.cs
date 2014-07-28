@@ -89,20 +89,30 @@ public class Level : MonoBehaviour
         }
     }
 
-    public void LoadSave()
+    public bool LoadSave()
     {
         try {
             var states = BinarySaveLoad.LoadBooleanArray(Puzzle.SaveKeyName, _tiles.Length);
-            if (states == null) return;
+            if (states == null) return false;
 
             for (int i = 0; i < _tiles.Length; ++i) {
                 var tile = _tiles[i].GetComponent<Tile>();
 
                 if (tile.IsEditable) tile.IsSolid = states[i];
             }
+
+            for (int x = 0; x < Width; ++x) {
+                for (int y = 0; y < Height; ++y) {
+                    this[x, y].FindNeighbours();
+                }
+            }
+
+            return true;
         } catch {
             Debug.Log("Error encountered when trying to load \"" + Puzzle.SaveKeyName + "\"");
         }
+
+        return false;
     }
 
     public void ReloadPuzzle()
@@ -190,21 +200,25 @@ public class Level : MonoBehaviour
             this[Width - 2, y].IsEditable = false;
         }
 
-        LoadSave();
-
-        for (int x = 0; x < Width; ++x) {
-            for (int y = 0; y < Height; ++y) {
-                this[x, y].FindNeighbours();
+        if (!LoadSave()) {
+            for (int x = 0; x < Width; ++x) {
+                for (int y = 0; y < Height; ++y) {
+                    this[x, y].FindNeighbours();
+                }
             }
         }
 
         _backPlane.transform.localScale = new Vector3(
             OverviewCamera.orthographicSize * OverviewCamera.aspect * 2,
             OverviewCamera.orthographicSize * 2, 1);
+
+        SetCameraPosition(MainCamera, new Vector2(-Width / 2f, InputTiles.Average(x => x.transform.position.y)));
     }
 
     void Start()
     {
+        PulseMode = PulseMode.Continuous;
+
         MainCamera.orthographicSize = 6 / MainCamera.aspect;
 
         _overviewBounds = GameObject.CreatePrimitive(PrimitiveType.Quad);
@@ -247,8 +261,6 @@ public class Level : MonoBehaviour
         }
 
         if (Puzzle == null) LoadPuzzle(Puzzle.GetPuzzlesInCategory("Test").First());
-
-        SetCameraPosition(MainCamera, new Vector2(-Width / 2f, InputTiles.Average(x => x.transform.position.y)));
 
         StepSpeed = 2;
     }

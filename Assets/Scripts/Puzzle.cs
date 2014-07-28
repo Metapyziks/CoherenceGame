@@ -44,7 +44,10 @@ public class PuzzleAttribute : Attribute
 
     public int InputPeriod { get; private set; }
 
-    public PuzzleAttribute(int index, String name, String desc, Difficulty diff, int width, int height, int inputPeriod = 2)
+    public String Solution { get; private set; }
+
+    public PuzzleAttribute(int index, String name, String desc, Difficulty diff, int width, int height,
+        int inputPeriod = 2, string solution = null)
     {
         Index = index;
         Name = name;
@@ -55,6 +58,7 @@ public class PuzzleAttribute : Attribute
         Height = height;
 
         InputPeriod = inputPeriod;
+        Solution = solution;
     }
 }
 
@@ -132,6 +136,7 @@ public abstract class Puzzle : IComparable<Puzzle>
                 puzzle.Width = puz.Width;
                 puzzle.Height = puz.Height;
                 puzzle.InputPeriod = puz.InputPeriod;
+                puzzle.Solution = puz.Solution;
 
                 var inputs = subType.GetCustomAttributes(typeof(InputAttribute), true)
                     .Cast<InputAttribute>()
@@ -204,6 +209,8 @@ public abstract class Puzzle : IComparable<Puzzle>
     public int Height { get; private set; }
 
     public int InputPeriod { get; private set; }
+
+    public String Solution { get; private set; }
 
     public int InputCount { get { return InputLocations.Length; } }
 
