@@ -3,6 +3,7 @@
 using System.Collections;
 using System.Linq;
 using System.Collections.Generic;
+using System.IO;
 
 public enum PulseMode
 {
@@ -78,6 +79,62 @@ public class Level : MonoBehaviour
         }
     }
 
+    public string GetSavePath()
+    {
+        return Path.Combine("saves", string.Format("{0}-{1}.sav", Puzzle.Category, Puzzle.Index));
+    }
+
+    public void SavePuzzle()
+    {
+        var path = GetSavePath();
+        var direc = Path.GetDirectoryName(path);
+
+        if (!Directory.Exists(direc)) {
+            Directory.CreateDirectory(direc);
+        }
+
+        using (var writer = new BinaryWriter(File.OpenWrite(path))) {
+            writer.Write(Puzzle.Category);
+            writer.Write(Puzzle.Index);
+            writer.Write(Puzzle.Name);
+            writer.Write(Puzzle.Width);
+            writer.Write(Puzzle.Height);
+            writer.Write(Puzzle.InputCount);
+            writer.Write(Puzzle.OutputCount);
+
+            for (int y = 0; y < Puzzle.Height; ++y) {
+                for (int x = 0; x < Puzzle.Width; ++x) {
+                    writer.Write(this[x, y].IsSolid);
+                }
+            }
+        }
+    }
+
+    public void LoadSave()
+    {
+        if (File.Exists(GetSavePath())) {
+            try {
+                using (var reader = new BinaryReader(File.OpenRead(GetSavePath()))) {
+                    if (!reader.ReadString().Equals(Puzzle.Category)) return;
+                    if (!reader.ReadInt32().Equals(Puzzle.Index)) return;
+                    if (!reader.ReadString().Equals(Puzzle.Name)) return;
+                    if (!reader.ReadInt32().Equals(Puzzle.Width)) return;
+                    if (!reader.ReadInt32().Equals(Puzzle.Height)) return;
+                    if (!reader.ReadInt32().Equals(Puzzle.InputCount)) return;
+                    if (!reader.ReadInt32().Equals(Puzzle.OutputCount)) return;
+
+                    for (int y = 0; y < Puzzle.Height; ++y) {
+                        for (int x = 0; x < Puzzle.Width; ++x) {
+                            this[x,y].IsSolid = reader.ReadBoolean();
+                        }
+                    }
+                }
+            } catch {
+                Debug.Log("Error encountered when trying to load save \"" + GetSavePath() + "\"");
+            }
+        }
+    }
+
     public void ReloadPuzzle()
     {
         LoadPuzzle(Puzzle);
@@ -90,6 +147,10 @@ public class Level : MonoBehaviour
     
     public void LoadPuzzle(Puzzle puzzle)
     {
+        if (Puzzle != null) {
+            SavePuzzle();
+        }
+
         if (_computrons != null) {
             foreach (var computron in _computrons) {
                 Destroy(computron.gameObject);
@@ -158,6 +219,8 @@ public class Level : MonoBehaviour
 
             this[Width - 2, y].IsEditable = false;
         }
+
+        LoadSave();
 
         for (int x = 0; x < Width; ++x) {
             for (int y = 0; y < Height; ++y) {
