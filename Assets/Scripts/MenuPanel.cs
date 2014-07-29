@@ -144,7 +144,7 @@ public class MenuPanel : MonoBehaviour
         _titleTxt = CreateText(new Vector2(0.5f, 0.02f), TextAnchor.UpperCenter, TextAlignment.Center);
         _titleTxt.fontSize = 20;
 
-        _descrTxt = CreateText(new Vector2(0.5f, 0.12f), TextAnchor.UpperCenter, TextAlignment.Left);
+        _descrTxt = CreateText(new Vector2(0.5f, 0.17f), TextAnchor.MiddleCenter, TextAlignment.Left);
         _descrTxt.fontSize = 14;
 
         _prevBtn = CreateButton(new Vector2(0.275f, 0.32f), new Vector2(0.425f, 0.1f));
