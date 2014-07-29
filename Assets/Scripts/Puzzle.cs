@@ -140,6 +140,7 @@ public abstract class Puzzle : IComparable<Puzzle>
 
                 var inputs = subType.GetCustomAttributes(typeof(InputAttribute), true)
                     .Cast<InputAttribute>()
+                    .OrderBy(x => x.Placement)
                     .ToArray();
 
                 int from = (puz.Height - inputs.Max(x => x.Placement)) / 2;
@@ -149,6 +150,7 @@ public abstract class Puzzle : IComparable<Puzzle>
 
                 var outputs = subType.GetCustomAttributes(typeof(OutputAttribute), true)
                     .Cast<OutputAttribute>()
+                    .OrderBy(x => x.Placement)
                     .ToArray();
 
                 from = (puz.Height - outputs.Max(x => x.Placement)) / 2;

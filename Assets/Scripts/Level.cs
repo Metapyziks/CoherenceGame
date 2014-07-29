@@ -19,6 +19,7 @@ public class Level : MonoBehaviour
     private GameObject _backPlane;
 
     private GameObject[] _tiles;
+    private GameObject[] _arrows;
 
     private List<Computron> _computrons;
 
@@ -50,6 +51,8 @@ public class Level : MonoBehaviour
     public Material OverviewBoundsMaterial;
     public Material DividerShadowMaterial;
     public Material BackPlaneMaterial;
+
+    public Material ArrowMaterial;
 
     public Camera MainCamera;
     public Camera OverviewCamera;
@@ -152,21 +155,23 @@ public class Level : MonoBehaviour
 
         if (Puzzle != null) {
             SavePuzzle();
-        }
 
-        if (_computrons != null) {
+            foreach (var arrow in _arrows) {
+                Destroy(arrow.gameObject);
+            }
+
             foreach (var computron in _computrons) {
                 Destroy(computron.gameObject);
             }
-        }
 
-        // TODO: Save as many tiles as possible from being destroyed
-        if (_tiles != null && _tiles.Length != puzzle.Width * puzzle.Height) {
-            foreach (var tile in _tiles) {
-                Destroy(tile.gameObject);
+            // TODO: Save as many tiles as possible from being destroyed
+            if (_tiles.Length != puzzle.Width * puzzle.Height) {
+                foreach (var tile in _tiles) {
+                    Destroy(tile.gameObject);
+                }
+
+                _tiles = null;
             }
-
-            _tiles = null;
         }
 
         Delta = 0f;
@@ -199,6 +204,8 @@ public class Level : MonoBehaviour
             }
         }
 
+        _arrows = new GameObject[Puzzle.InputCount + Puzzle.OutputCount];
+
         InputTiles = new Tile[Puzzle.InputCount];
         for (int i = 0; i < Puzzle.InputCount; ++i) {
             int y = Puzzle.InputLocations[i];
@@ -209,6 +216,13 @@ public class Level : MonoBehaviour
             this[1, y].IsSolid = false;
 
             this[1, y].IsEditable = false;
+
+            var arr = _arrows[i] = GameObject.CreatePrimitive(PrimitiveType.Quad);
+            Destroy(arr.GetComponent<MeshCollider>());
+            arr.transform.position = this[0, y].transform.position + new Vector3(0.5f, 0.0f);
+            arr.layer = LayerMask.NameToLayer("Shared View");
+            arr.renderer.sharedMaterial = ArrowMaterial;
+            arr.renderer.sortingOrder = 0;
         }
 
         OutputTiles = new Tile[Puzzle.OutputCount];
@@ -221,6 +235,13 @@ public class Level : MonoBehaviour
             this[Width - 2, y].IsSolid = false;
 
             this[Width - 2, y].IsEditable = false;
+
+            var arr = _arrows[Puzzle.InputCount + i] = GameObject.CreatePrimitive(PrimitiveType.Quad);
+            Destroy(arr.GetComponent<MeshCollider>());
+            arr.transform.position = this[Width - 1, y].transform.position - new Vector3(0.5f, 0.0f);
+            arr.layer = LayerMask.NameToLayer("Shared View");
+            arr.renderer.sharedMaterial = ArrowMaterial;
+            arr.renderer.sortingOrder = 0;
         }
 
         if (!LoadSave()) {

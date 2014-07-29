@@ -9,7 +9,41 @@ public class TestPuzzles
 {
     [Puzzle(
         index: 0,
-        name: "Invert",
+        name: "Pass through",
+        desc: "Output something for each input.",
+        diff: Difficulty.Trivial,
+        width: 13, height: 13,
+        inputPeriod: 2
+    )]
+    [Input("A", 0), Output("Q", 0)]
+    public class PassThrough : Puzzle
+    {
+        public override bool ShouldAccept(Spin[] input, Spin[] output)
+        {
+            return output[0] != Spin.None;
+        }
+    }
+
+    [Puzzle(
+        index: 1,
+        name: "Split",
+        desc: "Output something through both outputs simultaneously for each input.",
+        diff: Difficulty.Trivial,
+        width: 13, height: 13,
+        inputPeriod: 2
+    )]
+    [Input("A", 0), Output("Q1", 0), Output("Q2", 2)]
+    public class Split : Puzzle
+    {
+        public override bool ShouldAccept(Spin[] input, Spin[] output)
+        {
+            return output[0] != Spin.None && output[1] != Spin.None;
+        }
+    }
+
+    [Puzzle(
+        index: 2,
+        name: "Flip",
         desc: "Output RED for BLUE inputs, and output BLUE for RED inputs.",
         diff: Difficulty.Trivial,
         width: 13, height: 13,
@@ -26,8 +60,8 @@ public class TestPuzzles
     }
 
     [Puzzle(
-        index: 1,
-        name: "OR Gate",
+        index: 3,
+        name: "At least one RED",
         desc: "Output RED if either input is RED, otherwise output BLUE.",
         diff: Difficulty.Trivial,
         width: 13, height: 13,
@@ -44,8 +78,28 @@ public class TestPuzzles
     }
 
     [Puzzle(
-        index: 2,
-        name: "AND Gate",
+        index: 4,
+        name: "Crossover",
+        desc: "Send each input to the output in the opposite corner of the screen, with both arriving simultaneously.",
+        diff: Difficulty.Easy,
+        width: 13, height: 13,
+        inputPeriod: 2
+    )]
+    [Input("A", 0), Input("B", 6), Output("Q1", 0), Output("Q2", 6)]
+    public class Crossover : Puzzle
+    {
+        public override bool ShouldAccept(Spin[] input, Spin[] output)
+        {
+            //Debug.Log("A: " + input[0] + ", " + output[0]);
+            //Debug.Log("B: " + input[1] + ", " + output[1]);
+
+            return input[0] == output[1] && input[1] == output[0];
+        }
+    }
+
+    [Puzzle(
+        index: 5,
+        name: "Exactly two REDs",
         desc: "Output RED if both inputs are RED, otherwise output BLUE.",
         diff: Difficulty.Trivial,
         width: 13, height: 13,
@@ -62,25 +116,7 @@ public class TestPuzzles
     }
 
     [Puzzle(
-        index: 3,
-        name: "XOR Gate",
-        desc: "Output RED if only one input is RED, otherwise output BLUE.",
-        diff: Difficulty.Easy,
-        width: 13, height: 13,
-        inputPeriod: 2,
-        solution: "/////////+hB/CMA8Y/+////////AQ=="
-    )]
-    [Input("A", 0), Input("B", 2), Output("Q", 0)]
-    public class XorGate : Puzzle
-    {
-        public override bool ShouldAccept(Spin[] input, Spin[] output)
-        {
-            return output[0] != Spin.None && (input[0] != input[1]) == (output[0] == Spin.Up);
-        }
-    }
-
-    [Puzzle(
-        index: 4,
+        index: 6,
         name: "Only RED",
         desc: "Output one RED for each input of either color.",
         diff: Difficulty.Easy,
@@ -98,7 +134,25 @@ public class TestPuzzles
     }
 
     [Puzzle(
-        index: 5,
+        index: 7,
+        name: "Exactly one RED",
+        desc: "Output RED if only one input is RED, otherwise output BLUE.",
+        diff: Difficulty.Easy,
+        width: 13, height: 13,
+        inputPeriod: 2,
+        solution: "/////////+hB/CMA8Y/+////////AQ=="
+    )]
+    [Input("A", 0), Input("B", 2), Output("Q", 0)]
+    public class XorGate : Puzzle
+    {
+        public override bool ShouldAccept(Spin[] input, Spin[] output)
+        {
+            return output[0] != Spin.None && (input[0] != input[1]) == (output[0] == Spin.Up);
+        }
+    }
+
+    [Puzzle(
+        index: 8,
         name: "No BLUE",
         desc: "Output anything for a RED input, but nothing for a BLUE one.",
         diff: Difficulty.Easy,
@@ -121,7 +175,7 @@ public class TestPuzzles
     }
 
     [Puzzle(
-        index: 6,
+        index: 9,
         name: "Sandbox",
         desc: "Try to break the game.",
         diff: Difficulty.Extreme,
