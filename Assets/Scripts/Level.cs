@@ -14,9 +14,10 @@ public enum PulseMode
 
 public class Level : MonoBehaviour
 {
+    private RenderTexture _overviewRT;
+
     private GameObject _overviewBounds;
     private GameObject _dividerShadow;
-    private GameObject _backPlane;
 
     private GameObject[] _tiles;
     private GameObject[] _arrows;
@@ -39,6 +40,8 @@ public class Level : MonoBehaviour
 
     public int Height { get { return Puzzle.Height; } }
 
+    public Material OverviewMaterial;
+
     public Material BlankMaterial;
     public Material WallMaterial;
 
@@ -56,6 +59,8 @@ public class Level : MonoBehaviour
 
     public Camera MainCamera;
     public Camera OverviewCamera;
+
+    public MenuPanel MenuPanel;
 
     public Tile[] InputTiles { get; private set; }
 
@@ -186,7 +191,27 @@ public class Level : MonoBehaviour
         _tiles = _tiles ?? new GameObject[Width * Height];
         _computrons = new List<Computron>();
 
-        OverviewCamera.orthographicSize = Mathf.Max(Height / 2f, Width / 2f / OverviewCamera.aspect) + 0.5f;
+        var mapAspect = MenuPanel.MenuCamera.aspect / MenuPanel.MapRelativeSize;
+
+        OverviewCamera.aspect = mapAspect;
+        OverviewCamera.orthographicSize = Mathf.Max(Height / 2f, Width / 2f / mapAspect);
+
+        int rtWidth = Mathf.RoundToInt(OverviewCamera.pixelWidth * 0.9f);
+        int rtHeight = Mathf.RoundToInt(OverviewCamera.pixelHeight * 0.9f);
+
+        if (_overviewRT != null && (_overviewRT.width != rtWidth || _overviewRT.height != rtHeight)) {
+            _overviewRT.Release();
+            Destroy(_overviewRT);
+
+            _overviewRT = null;
+        }
+
+        if (_overviewRT == null) {
+            _overviewRT = new RenderTexture(rtWidth, rtHeight, 0);
+        }
+
+        OverviewCamera.targetTexture = _overviewRT;
+        OverviewMaterial.mainTexture = _overviewRT;
 
         for (int x = 0; x < Width; ++x) {
             for (int y = 0; y < Height; ++y) {
@@ -251,11 +276,7 @@ public class Level : MonoBehaviour
                 }
             }
         }
-
-        _backPlane.transform.localScale = new Vector3(
-            OverviewCamera.orthographicSize * OverviewCamera.aspect * 2,
-            OverviewCamera.orthographicSize * 2, 1);
-
+        
         SetCameraPosition(MainCamera, new Vector2(-Width / 2f, InputTiles.Average(x => x.transform.position.y)));
     }
 
@@ -286,12 +307,6 @@ public class Level : MonoBehaviour
         _dividerShadow.layer = LayerMask.NameToLayer("Main View");
         _dividerShadow.transform.localScale = new Vector3(0.25f, MainCamera.orthographicSize * 2f, 1f);
         _dividerShadow.renderer.material = DividerShadowMaterial;
-
-        _backPlane = GameObject.CreatePrimitive(PrimitiveType.Quad);
-        Destroy(_backPlane.GetComponent<MeshCollider>());
-        _backPlane.layer = LayerMask.NameToLayer("Overview");
-        _backPlane.renderer.material = BackPlaneMaterial;
-        _backPlane.renderer.sortingOrder = -1;
 
         if (PlayerPrefs.HasKey("CategoryName")) {
             var catName = PlayerPrefs.GetString("CategoryName");

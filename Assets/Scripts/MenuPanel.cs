@@ -4,13 +4,16 @@ using UnityEngine;
 
 public class MenuPanel : MonoBehaviour
 {
+    public const float MapRelativeSize = 0.4f;
+
     public Camera MenuCamera;
 
     public Material ButtonMaterial;
 
     public Level Level;
-
+    
     private GameObject _backPlane;
+    private GameObject _overviewPlane;
 
     private Puzzle _oldPuzzle;
 
@@ -87,19 +90,23 @@ public class MenuPanel : MonoBehaviour
     {
         var scale = FindRelativeToScreenScale();
 
+        float guiSize = 1 - MapRelativeSize;
+
         elem.pixelOffset = new Vector2(
             origin.x * scale.x,
-            (1 - origin.y) * scale.y
+            (guiSize - origin.y * guiSize) * scale.y
         );
     }
 
     public void PositionElement(Button elem, Vector2 origin, Vector2 size)
     {
+        var guiSize = 1 - MapRelativeSize;
+
         var a = MenuCamera.ViewportToWorldPoint(new Vector3(0, 0, 0));
-        var b = MenuCamera.ViewportToWorldPoint(new Vector3(1, 1, 0));
+        var b = MenuCamera.ViewportToWorldPoint(new Vector3(1, guiSize, 0));
 
         var scale = b - a;
-
+        
         origin = new Vector2(
             a.x + origin.x * scale.x,
             b.y - origin.y * scale.y
@@ -127,7 +134,9 @@ public class MenuPanel : MonoBehaviour
 
         var vp = MenuCamera.ScreenToViewportPoint(cp);
 
-        return new Vector2(vp.x, 1f - vp.y);
+        var guiSize = 1 - MapRelativeSize;
+
+        return new Vector2(vp.x, guiSize - vp.y / guiSize);
     }
 
     void Start()
@@ -141,6 +150,16 @@ public class MenuPanel : MonoBehaviour
             MenuCamera.orthographicSize * MenuCamera.aspect * 2,
             MenuCamera.orthographicSize * 2, 1);
 
+        _overviewPlane = GameObject.CreatePrimitive(PrimitiveType.Quad);
+        Destroy(_overviewPlane.GetComponent<MeshCollider>());
+        _overviewPlane.layer = LayerMask.NameToLayer("Menu View");
+        _overviewPlane.renderer.material = Level.OverviewMaterial;
+        _overviewPlane.transform.localScale = new Vector3(
+            MenuCamera.orthographicSize * MenuCamera.aspect * 1.8f,
+            MenuCamera.orthographicSize * 1.8f * MapRelativeSize, 1);
+        _overviewPlane.transform.position = new Vector3(
+            0f, MenuCamera.orthographicSize * (1f - MapRelativeSize));
+        
         _titleTxt = CreateText(new Vector2(0.5f, 0.02f), TextAnchor.UpperCenter, TextAlignment.Center);
         _titleTxt.fontSize = 20;
 
