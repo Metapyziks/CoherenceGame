@@ -24,6 +24,8 @@ public class Level : MonoBehaviour
 
     private List<Computron> _computrons;
 
+    private bool _overviewInvalid;
+
     private IEnumerator<Spin[]> _inputIter;
     private Spin[][] _inputQueue;
     private List<Spin[]> _pastInputs;
@@ -172,13 +174,16 @@ public class Level : MonoBehaviour
                 Destroy(computron.gameObject);
             }
 
-            // TODO: Save as many tiles as possible from being destroyed
-            if (_tiles.Length != puzzle.Width * puzzle.Height) {
-                foreach (var tile in _tiles) {
-                    Destroy(tile.gameObject);
-                }
+            var oldTiles = _tiles;
 
-                _tiles = null;
+            _tiles = new GameObject[puzzle.Width * puzzle.Height];
+
+            for (int i = 0; i < oldTiles.Length; ++i) {
+                if (i < _tiles.Length) {
+                    _tiles[i] = oldTiles[i];
+                } else {
+                    Destroy(oldTiles[i].gameObject);
+                }
             }
         }
 
@@ -225,13 +230,17 @@ public class Level : MonoBehaviour
         OverviewBackCamera.targetTexture = _overviewRT;
         OverviewMaterial.mainTexture = _overviewRT;
 
-
         for (int x = 0; x < Width; ++x) {
             for (int y = 0; y < Height; ++y) {
-                var tile = _tiles[x + y * Width] = _tiles[x + y * Width]
-                    ?? (GameObject) Instantiate(TilePrefab,
-                        new Vector3(x - Width / 2f + .5f, y - Height / 2f + .5f),
-                        Quaternion.identity);
+                var tile = _tiles[x + y * Width];
+                var pos = new Vector3(x - Width / 2f + .5f, y - Height / 2f + .5f);
+
+                if (tile == null) {
+                    tile = (GameObject) Instantiate(TilePrefab, pos, Quaternion.identity);
+                    _tiles[x + y * Width] = tile;
+                } else {
+                    tile.transform.position = pos;
+                }
 
                 var tComp = tile.GetComponent<Tile>();
                 tComp.Level = this;
@@ -290,9 +299,9 @@ public class Level : MonoBehaviour
             }
         }
 
-        OverviewBackCamera.Render();
-        
         SetCameraPosition(MainCamera, new Vector2(-Width / 2f, InputTiles.Average(x => x.transform.position.y)));
+
+        _overviewInvalid = true;
     }
 
     void Start()
@@ -422,7 +431,7 @@ public class Level : MonoBehaviour
                         }
                     }
 
-                    OverviewBackCamera.Render();
+                    _overviewInvalid = true;
                 }
             }
         }
@@ -508,6 +517,11 @@ public class Level : MonoBehaviour
             _touching = false;
             _placing = false;
             _dragging = false;
+        }
+
+        if (_overviewInvalid) {
+            _overviewInvalid = false;
+            OverviewBackCamera.Render();
         }
     }
 

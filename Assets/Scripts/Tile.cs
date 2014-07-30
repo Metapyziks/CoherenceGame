@@ -7,7 +7,6 @@ using System.Linq;
 public class Tile : MonoBehaviour
 {
     private int _neighboursID;
-    private int _colorID;
     
     private bool _isSolid;
     private bool _invalidMaterial;
@@ -74,10 +73,11 @@ public class Tile : MonoBehaviour
         if (_overviewDummy == null) {
             _overviewDummy = GameObject.CreatePrimitive(PrimitiveType.Quad);
             Destroy(_overviewDummy.GetComponent<MeshCollider>());
-            _overviewDummy.transform.position = gameObject.transform.position;
             _overviewDummy.layer = LayerMask.NameToLayer("Overview Back");
             _overviewDummy.renderer.sortingOrder = 0;
         }
+
+        _overviewDummy.transform.position = gameObject.transform.position;
 
         if (_invalidMaterial) {
             _invalidMaterial = false;
