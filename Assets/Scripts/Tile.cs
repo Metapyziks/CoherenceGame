@@ -36,10 +36,6 @@ public class Tile : MonoBehaviour
 
     void Start()
     {
-        Destroy(GetComponent<MeshCollider>());
-
-        gameObject.layer = LayerMask.NameToLayer("Main View");
-        
         _neighboursID = Shader.PropertyToID("_Neighbours");
         _invalidMaterial = true;
     }

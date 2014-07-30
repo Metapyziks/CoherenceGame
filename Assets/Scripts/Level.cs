@@ -57,6 +57,8 @@ public class Level : MonoBehaviour
 
     public Material ArrowMaterial;
 
+    public GameObject TilePrefab;
+
     public Camera MainCamera;
     public Camera OverviewBackCamera;
     public Camera OverviewCamera;
@@ -227,11 +229,11 @@ public class Level : MonoBehaviour
         for (int x = 0; x < Width; ++x) {
             for (int y = 0; y < Height; ++y) {
                 var tile = _tiles[x + y * Width] = _tiles[x + y * Width]
-                    ?? GameObject.CreatePrimitive(PrimitiveType.Quad);
+                    ?? (GameObject) Instantiate(TilePrefab,
+                        new Vector3(x - Width / 2f + .5f, y - Height / 2f + .5f),
+                        Quaternion.identity);
 
-                tile.transform.position = new Vector3(x - Width / 2f + .5f, y - Height / 2f + .5f);
-
-                var tComp = tile.GetComponent<Tile>() ?? tile.AddComponent<Tile>();
+                var tComp = tile.GetComponent<Tile>();
                 tComp.Level = this;
                 tComp.X = x;
                 tComp.Y = y;
