@@ -136,7 +136,7 @@ public class MenuPanel : MonoBehaviour
 
         var guiSize = 1 - MapRelativeSize;
 
-        return new Vector2(vp.x, guiSize - vp.y / guiSize);
+        return new Vector2(vp.x, 1 - vp.y / guiSize);
     }
 
     void Start()

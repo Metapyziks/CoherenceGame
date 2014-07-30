@@ -42,12 +42,6 @@ public class Tile : MonoBehaviour
         
         _neighboursID = Shader.PropertyToID("_Neighbours");
         _invalidMaterial = true;
-
-        _overviewDummy = GameObject.CreatePrimitive(PrimitiveType.Quad);
-        Destroy(_overviewDummy.GetComponent<MeshCollider>());
-        _overviewDummy.transform.position = gameObject.transform.position;
-        _overviewDummy.layer = LayerMask.NameToLayer("Overview");
-        _overviewDummy.renderer.sortingOrder = 0;
     }
 
     private bool IsNeighbourEmpty(int x, int y)
@@ -73,11 +67,21 @@ public class Tile : MonoBehaviour
         for (int i = 0; i < 8; ++i) {
             Neighbours |= IsNeighbourEmpty(X + neighbours[i, 0], Y + neighbours[i, 1]) == IsSolid ? 1 << i : 0;
         }
+
+        UpdateMaterial();
     }
 
-    void Update()
+    public void UpdateMaterial()
     {
         if (Level == null) return;
+
+        if (_overviewDummy == null) {
+            _overviewDummy = GameObject.CreatePrimitive(PrimitiveType.Quad);
+            Destroy(_overviewDummy.GetComponent<MeshCollider>());
+            _overviewDummy.transform.position = gameObject.transform.position;
+            _overviewDummy.layer = LayerMask.NameToLayer("Overview Back");
+            _overviewDummy.renderer.sortingOrder = 0;
+        }
 
         if (_invalidMaterial) {
             _invalidMaterial = false;
@@ -93,7 +97,10 @@ public class Tile : MonoBehaviour
                 _overviewDummy.renderer.sortingOrder = 0;
             }
         }
+    }
 
+    void OnWillRenderObject()
+    {
         renderer.material.SetFloat(_neighboursID, Neighbours / 255f);
     }
 

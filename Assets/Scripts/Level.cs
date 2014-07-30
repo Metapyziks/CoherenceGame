@@ -58,6 +58,7 @@ public class Level : MonoBehaviour
     public Material ArrowMaterial;
 
     public Camera MainCamera;
+    public Camera OverviewBackCamera;
     public Camera OverviewCamera;
 
     public MenuPanel MenuPanel;
@@ -192,12 +193,21 @@ public class Level : MonoBehaviour
         _computrons = new List<Computron>();
 
         var mapAspect = MenuPanel.MenuCamera.aspect / MenuPanel.MapRelativeSize;
+        
+        OverviewBackCamera.aspect = mapAspect;
+        OverviewBackCamera.orthographicSize = Mathf.Max(Height / 2f, Width / 2f / mapAspect);
 
         OverviewCamera.aspect = mapAspect;
-        OverviewCamera.orthographicSize = Mathf.Max(Height / 2f, Width / 2f / mapAspect);
+        OverviewCamera.orthographicSize = OverviewBackCamera.orthographicSize;
+        OverviewCamera.rect = new Rect(
+            0.75f + 0.05f * 0.25f,
+            (1f - MenuPanel.MapRelativeSize) + 0.05f * MenuPanel.MapRelativeSize,
+            0.25f * 0.9f,
+            MenuPanel.MapRelativeSize * 0.9f
+        );
 
-        int rtWidth = Mathf.RoundToInt(OverviewCamera.pixelWidth * 0.9f);
-        int rtHeight = Mathf.RoundToInt(OverviewCamera.pixelHeight * 0.9f);
+        int rtWidth = Mathf.RoundToInt(OverviewCamera.pixelWidth);
+        int rtHeight = Mathf.RoundToInt(OverviewCamera.pixelHeight);
 
         if (_overviewRT != null && (_overviewRT.width != rtWidth || _overviewRT.height != rtHeight)) {
             _overviewRT.Release();
@@ -210,8 +220,9 @@ public class Level : MonoBehaviour
             _overviewRT = new RenderTexture(rtWidth, rtHeight, 0);
         }
 
-        OverviewCamera.targetTexture = _overviewRT;
+        OverviewBackCamera.targetTexture = _overviewRT;
         OverviewMaterial.mainTexture = _overviewRT;
+
 
         for (int x = 0; x < Width; ++x) {
             for (int y = 0; y < Height; ++y) {
@@ -276,6 +287,8 @@ public class Level : MonoBehaviour
                 }
             }
         }
+
+        OverviewBackCamera.Render();
         
         SetCameraPosition(MainCamera, new Vector2(-Width / 2f, InputTiles.Average(x => x.transform.position.y)));
     }
@@ -406,6 +419,8 @@ public class Level : MonoBehaviour
                             this[x, y].FindNeighbours();
                         }
                     }
+
+                    OverviewBackCamera.Render();
                 }
             }
         }
